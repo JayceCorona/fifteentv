@@ -15,63 +15,7 @@
         </div>
     </section>
 
-    <!-- JavaScript to dynamically generate time slots and countdown -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const grid = document.getElementById("schedule-grid");
-            const startTime = new Date();
-            startTime.setHours(9, 0, 0, 0); // Start at 9:00 AM
-
-            // Generate 15-minute blocks from 9 AM to 5 PM
-            for (let i = 0; i < 32; i++) { // 8 hours worth of 15-min blocks
-                const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
-
-                // Create a time slot block
-                const block = document.createElement("div");
-                block.className = "time-slot";
-                block.dataset.status = "free"; // Default status
-
-                // Populate block with details
-                block.innerHTML = `
-                    <p>Time: ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-                              ${endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                    <p>Price: $0.01</p>
-                    <p>Status: <span>Available</span></p>
-                    <p>Countdown: <span class="countdown">10:00</span></p>
-                `;
-
-                // Add block to grid and update start time for next slot
-                grid.appendChild(block);
-                startTime.setTime(endTime.getTime()); // Move to next 15-minute slot
-            }
-
-            // Function to start countdown for each slot
-            function startCountdown() {
-                const slots = document.querySelectorAll(".time-slot");
-                slots.forEach(slot => {
-                    const countdown = slot.querySelector(".countdown");
-                    let timeLeft = 10 * 60; // 10 minutes in seconds (example)
-
-                    const timer = setInterval(() => {
-                        const minutes = Math.floor(timeLeft / 60);
-                        const seconds = timeLeft % 60;
-                        countdown.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-                        timeLeft--;
-
-                        // Stop countdown when time reaches zero
-                        if (timeLeft < 0) {
-                            clearInterval(timer);
-                            countdown.textContent = "Auction Ended";
-                            slot.dataset.status = "taken";
-                            slot.querySelector("span").textContent = "Taken";
-                            slot.style.backgroundColor = "#ffd7d7"; // Change color to taken
-                        }
-                    }, 1000); // Update every second
-                });
-            }
-
-            startCountdown();
-        });
-    </script>
+    <!-- Link to your external JavaScript file -->
+    <script src="script.js"></script>
 </body>
 </html>
