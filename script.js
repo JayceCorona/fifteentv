@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const freeSlots = document.querySelectorAll(".time-slot[data-status='free']");
         freeSlots.forEach(slot => {
             const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(slot.countdown);
+            let timeLeft = parseInt(countdownElem.getAttribute('data-countdown')) || slot.countdown;
 
             const timer = setInterval(() => {
                 if (timeLeft <= 0) {
@@ -82,4 +82,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Helper function to format seconds as MM:SS
     function formatCountdown(seconds) {
         const minutes = Math.floor(seconds / 60);
-        c
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    }
+});
