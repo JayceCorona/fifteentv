@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("Script loaded"); // Debugging: confirm script runs
     const grid = document.getElementById("schedule-grid");
 
-    // Helper function to get the current time in CST
     function getCSTDate() {
         const now = new Date();
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // Convert to UTC
@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const nowCST = getCSTDate();
+    console.log("Current CST time:", nowCST); // Debugging: check CST time
 
-    // Calculate the next 15-minute interval in CST
     const startTime = new Date(nowCST);
     const minutes = startTime.getMinutes();
     const remainder = 15 - (minutes % 15);
@@ -19,12 +19,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const slots = [];
 
-    // Generate 15-minute blocks from the calculated CST start time until midnight CST
     while (startTime.getHours() < 24) { // Only show slots until midnight
-        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
-        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
+        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000);
 
-        // Determine initial price and status, with countdown until 15 minutes before start
         const status = nowCST > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - nowCST) / 1000) : 0;
 
@@ -33,13 +31,14 @@ document.addEventListener("DOMContentLoaded", function() {
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: status,
             countdown: countdown,
-            price: "Free" // Initial price is "Free" until bidding starts
+            price: "Free"
         });
 
-        startTime.setTime(endTime.getTime()); // Move to the next 15-minute slot
+        startTime.setTime(endTime.getTime());
     }
 
-    // Render each slot in the grid
+    console.log("Slots generated:", slots.length); // Debugging: confirm slots
+
     slots.forEach(slot => {
         const block = document.createElement("div");
         block.className = "time-slot";
@@ -55,31 +54,11 @@ document.addEventListener("DOMContentLoaded", function() {
         grid.appendChild(block);
     });
 
-    // Start countdown timers for all free slots
-    function startCountdown() {
-        const freeSlots = document.querySelectorAll(".time-slot[data-status='free']");
-        freeSlots.forEach(slot => {
-            const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(countdownElem.getAttribute('data-countdown')) || slot.countdown;
+    console.log("Slots rendered to DOM"); // Debugging: confirm rendering
 
-            const timer = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    countdownElem.textContent = "Auction Ended";
-                    slot.dataset.status = "taken";
-                    slot.querySelector("span").textContent = "Taken";
-                    slot.style.backgroundColor = "#ffd7d7"; // Update color to show it's taken
-                } else {
-                    timeLeft--;
-                    countdownElem.textContent = formatCountdown(timeLeft);
-                }
-            }, 1000);
-        });
-    }
+    // Commenting out countdown to check if it’s the issue
+    // startCountdown();
 
-    startCountdown();
-
-    // Helper function to format seconds as MM:SS
     function formatCountdown(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
