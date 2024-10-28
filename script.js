@@ -1,23 +1,32 @@
 document.addEventListener("DOMContentLoaded", function() {
     const grid = document.getElementById("schedule-grid");
-    const now = new Date();
 
-    // Calculate the next 15-minute interval for starting time
-    const startTime = new Date(now);
+    // Helper function to get the current time in CST
+    function getCSTDate() {
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // Convert to UTC
+        const cstOffset = -6; // CST is UTC-6
+        return new Date(utc + (3600000 * cstOffset));
+    }
+
+    const nowCST = getCSTDate();
+
+    // Calculate the next 15-minute interval in CST
+    const startTime = new Date(nowCST);
     const minutes = startTime.getMinutes();
     const remainder = 15 - (minutes % 15);
     startTime.setMinutes(minutes + remainder, 0, 0); // Set to nearest future 15-minute interval
 
     const slots = [];
 
-    // Generate 15-minute blocks from the calculated start time until the end of the day
-    while (startTime.getHours() < 24) { // Until midnight
+    // Generate 15-minute blocks from the calculated CST start time until midnight CST
+    while (startTime.getHours() < 24) { // Only show slots until midnight
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
 
         // Determine initial price and status, with countdown until 15 minutes before start
-        const status = now > countdownTarget ? "taken" : "free";
-        const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
+        const status = nowCST > countdownTarget ? "taken" : "free";
+        const countdown = status === "free" ? Math.floor((countdownTarget - nowCST) / 1000) : 0;
 
         slots.push({
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -51,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const freeSlots = document.querySelectorAll(".time-slot[data-status='free']");
         freeSlots.forEach(slot => {
             const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) * 60 || slot.countdown;
+            let timeLeft = parseInt(slot.countdown);
 
             const timer = setInterval(() => {
                 if (timeLeft <= 0) {
@@ -73,7 +82,4 @@ document.addEventListener("DOMContentLoaded", function() {
     // Helper function to format seconds as MM:SS
     function formatCountdown(seconds) {
         const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-    }
-});
+        c
