@@ -30,25 +30,25 @@ button {
 button:hover {
     background-color: #555;
 }
-
 .time-slot {
     border: 2px solid #333;
     border-radius: 8px;
     padding: 10px;
-    margin: 5px;
+    margin: 10px;
     text-align: center;
     background-color: #e7f3ff;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
+    display: inline-block;
+    width: 200px; /* Adjust width as needed */
 }
 
 .time-slot:hover {
     background-color: #cfe2f3;
 }
 
-/* Update colors based on availability */
 .time-slot[data-status="free"] {
     background-color: #e7f3ff;
 }
@@ -56,4 +56,10 @@ button:hover {
 .time-slot[data-status="taken"] {
     background-color: #ffd7d7;
     cursor: not-allowed;
+}
+
+#schedule-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
