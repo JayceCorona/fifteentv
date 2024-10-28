@@ -2,37 +2,33 @@ document.addEventListener("DOMContentLoaded", function() {
     const grid = document.getElementById("schedule-grid");
     const now = new Date();
 
-    // Calculate the next 15-minute interval for the starting time
+    // Calculate the next 15-minute interval for starting time
     const startTime = new Date(now);
     const minutes = startTime.getMinutes();
-    startTime.setMinutes(minutes + (15 - (minutes % 15)), 0, 0); // Round up to the next 15-minute mark
+    const remainder = 15 - (minutes % 15);
+    startTime.setMinutes(minutes + remainder, 0, 0); // Set to nearest future 15-minute interval
 
     const slots = [];
 
-    // Generate 15-minute blocks from the upcoming interval until midnight
-    while (startTime.getHours() < 24) { // Only show slots until midnight
+    // Generate 15-minute blocks from the calculated start time until the end of the day
+    while (startTime.getHours() < 24) { // Until midnight
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
 
-        // Determine status and calculate countdown
+        // Determine initial price and status, with countdown until 15 minutes before start
         const status = now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
 
-        // Push slot details to the array with initial price set to "Free"
         slots.push({
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: status,
             countdown: countdown,
-            price: "Free"
+            price: "Free" // Initial price is "Free" until bidding starts
         });
 
-        // Move to the next 15-minute interval
-        startTime.setTime(endTime.getTime());
+        startTime.setTime(endTime.getTime()); // Move to the next 15-minute slot
     }
-
-    // Sort slots so the next available slot appears at the top
-    slots.sort((a, b) => a.countdown - b.countdown);
 
     // Render each slot in the grid
     slots.forEach(slot => {
@@ -50,12 +46,12 @@ document.addEventListener("DOMContentLoaded", function() {
         grid.appendChild(block);
     });
 
-    // Start countdown timers
+    // Start countdown timers for all free slots
     function startCountdown() {
-        const slots = document.querySelectorAll(".time-slot[data-status='free']");
-        slots.forEach(slot => {
+        const freeSlots = document.querySelectorAll(".time-slot[data-status='free']");
+        freeSlots.forEach(slot => {
             const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(slot.countdown);
+            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) * 60 || slot.countdown;
 
             const timer = setInterval(() => {
                 if (timeLeft <= 0) {
