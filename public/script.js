@@ -118,34 +118,80 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Clear existing content
         grid.innerHTML = '';
 
-        // Add first time slot
-        addNextTimeSlot();
+        // Add current and next session
+        displayCurrentSession();
+        displayNextSession();
 
         // Start countdown timer
         updateCountdown();
         setInterval(updateCountdown, 1000);
+
+        // Add navigation setup
+        setupScheduleNavigation();
+
+        // Add resize listener
+        window.addEventListener('resize', () => {
+            updateNavButtons();
+        });
     }
 
-    function addNextTimeSlot() {
+    function displayCurrentSession() {
         const grid = document.getElementById('schedule-grid');
         const now = new Date();
         const minutes = now.getMinutes();
-        const nextSlotStart = new Date(now);
-        nextSlotStart.setMinutes(minutes - (minutes % 15) + 15, 0, 0);
-        const nextSlotEnd = new Date(nextSlotStart.getTime() + 15 * 60000);
+        const currentSlotStart = new Date(now);
+        currentSlotStart.setMinutes(minutes - (minutes % 15), 0, 0);
+        const currentSlotEnd = new Date(currentSlotStart.getTime() + 15 * 60000);
+
+        // Check if previous session exists and mark it as concluded
+        const previousSlot = grid.querySelector('.time-slot.current');
+        if (previousSlot) {
+            previousSlot.className = 'time-slot concluded';
+            const countdownDiv = previousSlot.querySelector('.slot-countdown');
+            countdownDiv.innerHTML = '<p class="concluded-text">Concluded</p>';
+        }
+
+        const slot = document.createElement('div');
+        slot.className = 'time-slot current';
+        slot.innerHTML = `
+            <div class="slot-time">
+                <p>Current: ${formatTimeString(currentSlotStart)} - ${formatTimeString(currentSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Active</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(slot);
+    }
+
+    function displayNextSession() {
+        const grid = document.getElementById('schedule-grid');
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const currentSlotEnd = new Date(now);
+        currentSlotEnd.setMinutes(minutes - (minutes % 15) + 15, 0, 0);
+        const nextSlotEnd = new Date(currentSlotEnd.getTime() + 15 * 60000);
 
         const slot = document.createElement('div');
         slot.className = 'time-slot next';
         slot.innerHTML = `
             <div class="slot-time">
-                <p>Next: ${formatTimeString(nextSlotStart)} - ${formatTimeString(nextSlotEnd)}</p>
+                <p>Next: ${formatTimeString(currentSlotEnd)} - ${formatTimeString(nextSlotEnd)}</p>
             </div>
             <div class="slot-info">
                 <p>Status: Upcoming</p>
                 <p>Price: Free</p>
             </div>
             <div class="slot-countdown">
-                <p class="countdown" data-end="${nextSlotStart.getTime()}">Loading...</p>
+                <p class="countdown" data-end="${currentSlotEnd.getTime()}">Loading...</p>
             </div>
         `;
 
@@ -153,32 +199,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function updateCountdown() {
-        const countdowns = document.querySelectorAll('.time-slot .countdown');
+        const countdowns = document.querySelectorAll('.time-slot.next .countdown');
         const now = new Date().getTime();
 
         countdowns.forEach(countdown => {
             const endTime = parseInt(countdown.dataset.end);
             if (isNaN(endTime)) return;
 
-            const countdownEndTime = endTime - 60000; // Start "Starting Soon" at 1 minute before
+            const countdownEndTime = endTime - 60000; // 60000ms = 1 minute
             const timeLeft = countdownEndTime - now;
             
             if (timeLeft <= 0) {
                 countdown.textContent = 'Starting Soon...';
-                
-                // If we're past the actual start time
-                if (now > endTime) {
-                    const slot = countdown.closest('.time-slot');
-                    if (slot) {
-                        // Change current slot to concluded
-                        slot.className = 'time-slot concluded';
-                        countdown.innerHTML = '<p class="concluded-text">Concluded</p>';
-                        slot.style.opacity = '0.6';
-                        
-                        // Add next time slot
-                        addNextTimeSlot();
-                    }
-                }
+                addNextTimeSegment();
                 return;
             }
 
@@ -186,6 +219,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         });
+
+        checkSessionTransition();
     }
 
     function formatTimeString(date) {
@@ -411,10 +446,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         .concluded-text {
             color: #666;
             font-style: italic;
-        }
-
-        .time-slot {
-            transition: opacity 0.3s ease;
         }
     `;
     document.head.appendChild(style);
