@@ -253,8 +253,7 @@ video::-webkit-media-controls {
     position: relative;
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    align-items: center;
 }
 
 #schedule-grid {
@@ -262,7 +261,7 @@ video::-webkit-media-controls {
     gap: 15px;
     height: min-content;
     transition: transform 0.3s ease;
-    padding: 20px 0;
+    margin: auto 0;
 }
 
 .chat-section {
