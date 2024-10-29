@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
     setupScheduleGrid(); // Set up the grid
     enableDragScroll(document.getElementById('schedule-grid'));
 
-    // Other functionality
+    // Glitch effect
     createGlitchText();
     setInterval(intensifyGlitch, 1000);
     setupChatInterface();
@@ -17,33 +17,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Window resize listener for adjusting slots
     handleResize();
 });
-
-function createGlitchText() {
-    const text = document.querySelector('.static-text');
-    if (!text) {
-        console.error("Static text element for glitch effect not found.");
-        return;
-    }
-    text.style.fontFamily = 'monospace';
-    text.style.position = 'relative';
-    text.style.overflow = 'hidden';
-}
-
-function intensifyGlitch() {
-    const text = document.querySelector('.static-text');
-    if (!text) return;
-
-    // Apply random text or position effects
-    text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
-    text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
-    text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
-
-    setTimeout(() => {
-        text.style.transform = 'translate(0, 0)'; // Reset transform
-        text.style.opacity = '1';
-        text.style.letterSpacing = 'normal';
-    }, 100);
-}
 
 // Initialize Stream Chat client and channel
 function initializeStreamChat() {
@@ -166,3 +139,39 @@ function displayNextSession() {
     grid.appendChild(block); // Add new slot to the grid
     console.log("New time slot added:", slot);
 }
+
+// Glitch Effect
+function createGlitchText() {
+    const text = document.querySelector('.static-text');
+    if (!text) {
+        console.error("Static text element for glitch effect not found.");
+        return;
+    }
+    text.style.fontFamily = 'monospace';
+    text.style.position = 'relative';
+    text.style.overflow = 'hidden';
+}
+
+function intensifyGlitch() {
+    const text = document.querySelector('.static-text');
+    if (!text) return;
+
+    text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
+    text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
+    text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
+
+    setTimeout(() => {
+        text.style.transform = 'translate(0, 0)'; // Reset transform
+        text.style.opacity = '1';
+        text.style.letterSpacing = 'normal';
+    }, 100);
+}
+
+// Utility Functions for Video
+function togglePlay(video, playPauseBtn) { /* ... */ }
+function toggleMute(video, muteBtn) { /* ... */ }
+function updateProgress(video, progress, currentTimeSpan) { /* ... */ }
+function seekVideo(e, video, progressBar) { /* ... */ }
+function formatTime(seconds) { /* ... */ }
+function enableDragScroll(element) { /* ... */ }
+function handleResize() { /* Resize logic for slots */ }

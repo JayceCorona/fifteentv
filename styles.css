@@ -465,3 +465,58 @@ video::-webkit-media-controls {
 .schedule-section::after {
     z-index: 2;
 }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #222;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+.schedule-section {
+    padding: 10px;
+    background: #333;
+}
+
+#schedule-grid {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: #444;
+    border: 1px solid #ccc;
+    width: 200px;
+}
+
+.time-slot {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #555;
+    color: #fff;
+    width: 100%;
+}
+
+.slot-time p,
+.slot-info p {
+    margin: 0;
+}
+
+/* Glitch Effect */
+.static-text {
+    font-family: 'VT323', monospace;
+    color: #fff;
+    font-size: 24px;
+    text-shadow: -2px 0 red, 2px 2px blue;
+    position: relative;
+    display: inline-block;
+    animation: glitch-animation 1s infinite;
+}
+
+@keyframes glitch-animation {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(2px, -2px); }
+    60% { transform: translate(-2px, 0); }
+    80% { transform: translate(0, 2px); }
+    100% { transform: translate(0, 0); }
+}
