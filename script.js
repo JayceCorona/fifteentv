@@ -192,4 +192,21 @@ document.addEventListener("DOMContentLoaded", function() {
     video.addEventListener('emptied', () => {
         videoPlayer.classList.remove('playing');
     });
+
+    // Add this to your existing JavaScript to make the text glitch more dramatic occasionally
+    function intensifyGlitch() {
+        const text = document.querySelector('.static-text');
+        text.style.animation = 'none';
+        text.offsetHeight; // Trigger reflow
+        text.style.animation = 'glitch 0.1s infinite';
+        
+        setTimeout(() => {
+            text.style.opacity = '0';
+            setTimeout(() => {
+                text.style.opacity = '1';
+            }, 100);
+        }, Math.random() * 2000);
+    }
+
+    setInterval(intensifyGlitch, 3000);
 });
