@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Script loaded");
 
-    // Initialize schedule grid first
+    // Initialize glitch effect
+    createGlitchText();
+    setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
+
+    // Initialize schedule grid
     setupScheduleGrid();
 
     // Socket.io setup
@@ -91,114 +95,90 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error("Grid element not found");
             return;
         }
-        console.log("Grid element found");
 
         // Clear existing content
         grid.innerHTML = '';
 
-        // Style the grid container
-        grid.style.display = 'flex';
-        grid.style.gap = '10px';
-        grid.style.padding = '20px';
-        grid.style.overflowX = 'auto';
-        grid.style.scrollBehavior = 'smooth';
+        // Add current and next session
+        displayCurrentSession();
+        displayNextSession();
 
-        // Add initial time slots
-        console.log("Adding initial time slots");
-        for (let i = 0; i < 5; i++) {
-            displayNextSession();
-        }
-
-        // Add navigation buttons
-        const scheduleSection = document.querySelector('.schedule-section');
-        const prevButton = document.createElement('button');
-        const nextButton = document.createElement('button');
-        
-        prevButton.className = 'schedule-nav prev';
-        nextButton.className = 'schedule-nav next';
-        prevButton.innerHTML = '&#8249;';
-        nextButton.innerHTML = '&#8250;';
-        
-        scheduleSection.appendChild(prevButton);
-        scheduleSection.appendChild(nextButton);
-
-        // Add scroll functionality
-        let scrollPosition = 0;
-        const scrollAmount = 200;
-
-        prevButton.addEventListener('click', () => {
-            scrollPosition = Math.max(scrollPosition - scrollAmount, 0);
-            grid.style.transform = `translateX(-${scrollPosition}px)`;
-            updateNavButtons();
-        });
-
-        nextButton.addEventListener('click', () => {
-            const maxScroll = grid.scrollWidth - grid.clientWidth;
-            scrollPosition = Math.min(scrollPosition + scrollAmount, maxScroll);
-            grid.style.transform = `translateX(-${scrollPosition}px)`;
-            updateNavButtons();
-        });
-
-        function updateNavButtons() {
-            prevButton.classList.toggle('hidden', scrollPosition === 0);
-            nextButton.classList.toggle('hidden', 
-                scrollPosition >= grid.scrollWidth - grid.clientWidth);
-        }
-
-        // Initial button state
-        updateNavButtons();
+        // Start countdown timer
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
     }
 
-    function displayNextSession() {
-        console.log("Displaying next session");
+    function displayCurrentSession() {
         const grid = document.getElementById('schedule-grid');
-        if (!grid) {
-            console.error("Error: #schedule-grid element not found.");
-            return;
-        }
-
         const now = new Date();
-        const slots = grid.querySelectorAll('.time-slot');
-        let startTime;
-
-        if (slots.length === 0) {
-            const minutes = now.getMinutes();
-            const remainder = 15 - (minutes % 15);
-            startTime = new Date(now);
-            startTime.setMinutes(minutes + remainder, 0, 0);
-        } else {
-            const lastSlot = slots[slots.length - 1];
-            const lastTimeText = lastSlot.querySelector('.slot-time p').textContent;
-            const endTimeStr = lastTimeText.split(' - ')[1];
-            startTime = parseTimeString(endTimeStr);
-        }
-
-        const endTime = new Date(startTime.getTime() + 15 * 60000);
+        const minutes = now.getMinutes();
+        const currentSlotStart = new Date(now);
+        currentSlotStart.setMinutes(minutes - (minutes % 15), 0, 0);
+        const currentSlotEnd = new Date(currentSlotStart.getTime() + 15 * 60000);
 
         const slot = document.createElement('div');
-        slot.className = 'time-slot';
+        slot.className = 'time-slot current';
         slot.innerHTML = `
             <div class="slot-time">
-                <p>Time: ${formatTimeString(startTime)} - ${formatTimeString(endTime)}</p>
+                <p>Current: ${formatTimeString(currentSlotStart)} - ${formatTimeString(currentSlotEnd)}</p>
             </div>
             <div class="slot-info">
-                <p>Status: Available</p>
+                <p>Status: Active</p>
                 <p>Price: Free</p>
             </div>
             <div class="slot-countdown">
-                <p class="countdown">Book Now</p>
+                <p class="countdown" data-end="${currentSlotEnd.getTime()}">In Progress</p>
             </div>
         `;
 
         grid.appendChild(slot);
-        console.log("Slot added to grid");
     }
 
-    function parseTimeString(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hours, minutes, 0, 0);
-        return date;
+    function displayNextSession() {
+        const grid = document.getElementById('schedule-grid');
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const currentSlotEnd = new Date(now);
+        currentSlotEnd.setMinutes(minutes - (minutes % 15) + 15, 0, 0);
+        const nextSlotEnd = new Date(currentSlotEnd.getTime() + 15 * 60000);
+
+        const slot = document.createElement('div');
+        slot.className = 'time-slot next';
+        slot.innerHTML = `
+            <div class="slot-time">
+                <p>Next: ${formatTimeString(currentSlotEnd)} - ${formatTimeString(nextSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Upcoming</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <p class="countdown" data-end="${currentSlotEnd.getTime()}">Loading...</p>
+            </div>
+        `;
+
+        grid.appendChild(slot);
+    }
+
+    function updateCountdown() {
+        const countdowns = document.querySelectorAll('.countdown');
+        const now = new Date().getTime();
+
+        countdowns.forEach(countdown => {
+            const endTime = parseInt(countdown.dataset.end);
+            if (isNaN(endTime)) return;
+
+            const timeLeft = endTime - now;
+            if (timeLeft <= 0) {
+                // Refresh the schedule grid when a slot ends
+                setupScheduleGrid();
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
     }
 
     function formatTimeString(date) {
@@ -207,5 +187,35 @@ document.addEventListener('DOMContentLoaded', function() {
             minute: '2-digit', 
             hour12: true 
         });
+    }
+
+    // Add these functions at the top level of your script
+    function createGlitchText() {
+        const staticText = document.querySelector('.static-text');
+        if (!staticText) return;
+        
+        // Split text into individual characters
+        const text = staticText.textContent;
+        staticText.textContent = '';
+        text.split('').forEach(char => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            staticText.appendChild(span);
+        });
+    }
+
+    function intensifyGlitch() {
+        const text = document.querySelector('.static-text');
+        if (!text) return;
+
+        text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
+        text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
+        text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
+
+        setTimeout(() => {
+            text.style.transform = 'translate(0, 0)';
+            text.style.opacity = '1';
+            text.style.letterSpacing = 'normal';
+        }, 100);
     }
 }); 

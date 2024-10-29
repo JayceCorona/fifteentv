@@ -41,9 +41,8 @@ body {
     font-weight: bold;
     z-index: 2;
     mix-blend-mode: screen;
-    animation: textGlitch 0.05s infinite;
     white-space: nowrap;
-    display: flex;
+    transition: transform 0.1s, opacity 0.1s, letter-spacing 0.1s;
 }
 
 .static-text span {
@@ -245,7 +244,7 @@ video::-webkit-media-controls {
 }
 
 .schedule-section {
-    height: 150px;
+    height: 250px;
     min-height: fit-content;
     overflow-y: hidden;
     padding: 20px;
@@ -258,9 +257,10 @@ video::-webkit-media-controls {
 
 #schedule-grid {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     height: min-content;
-    padding: 0 20px;
+    transition: transform 0.3s ease;
+    margin: auto 0;
 }
 
 .chat-section {
@@ -341,14 +341,12 @@ video::-webkit-media-controls {
 }
 
 .time-slot {
-    min-width: 250px;
+    min-width: 200px;
     background: white;
     padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 10px;
 }
 
 .time-slot.current {
@@ -359,42 +357,11 @@ video::-webkit-media-controls {
     border-left: 4px solid #2196F3;
 }
 
-.slot-time {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 8px;
-}
-
-.slot-info {
-    padding: 8px 0;
-}
-
-.slot-countdown {
-    border-top: 1px solid #eee;
-    padding-top: 8px;
-    text-align: center;
-}
-
-.time-slot p {
-    margin: 4px 0;
-    line-height: 1.2;
-    font-size: 14px;
-    color: #333;
-}
-
 .countdown {
     font-weight: bold;
     color: #333;
-    font-size: 18px;
-}
-
-/* Current session styling */
-.time-slot.current .countdown {
-    color: #4CAF50;
-}
-
-/* Next session styling */
-.time-slot.next .countdown {
-    color: #2196F3;
+    font-size: 1.2em;
+    text-align: center;
 }
 
 .schedule-section::before,
@@ -418,7 +385,45 @@ video::-webkit-media-controls {
     background: linear-gradient(-90deg, #f5f5f5 0%, transparent 100%);
 }
 
-/* Remove navigation buttons since we only show two slots */
 .schedule-nav {
-    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: opacity 0.3s ease;
+}
+
+.schedule-nav.prev {
+    left: 10px;
+}
+
+.schedule-nav.next {
+    right: 10px;
+}
+
+.schedule-nav:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Hide buttons when not needed */
+.schedule-nav.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Adjust the existing gradient overlays to be behind the buttons */
+.schedule-section::before,
+.schedule-section::after {
+    z-index: 2;
 }
