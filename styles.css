@@ -97,15 +97,15 @@ body {
     }
     25% { 
         transform: translateY(-1px);
-        font-size: 46px;
+        font-size: 38px;
     }
     50% { 
         transform: translateY(-1px);
-        font-size: 50px;
+        font-size: 58px;
     }
     75% { 
         transform: translateY(1px);
-        font-size: 44px;
+        font-size: 32px;
     }
 }
 
@@ -415,6 +415,12 @@ video::-webkit-media-controls {
 .slot-info span {
     font-weight: bold;
     color: #333;
+    font-size: 48px;
+    text-align: center;
+}
+
+.countdown::before {
+    content: none;
 }
 
 .schedule-section::before,
