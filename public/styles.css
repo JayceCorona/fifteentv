@@ -371,14 +371,52 @@ video::-webkit-media-controls {
 .time-slot {
     min-width: 250px;
     background: white;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
 }
 
+.slot-time {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+}
+
+.slot-info {
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.slot-countdown {
+    padding-top: 4px;
+    text-align: center;
+}
+
+.time-slot p {
+    margin: 2px 0;
+    line-height: 1.1;
+    font-size: 14px;
+    color: #333;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.countdown {
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+    margin: 2px 0;
+}
+
+/* Current and next session specific styles */
 .time-slot.current {
     border-left: 4px solid #4CAF50;
 }
@@ -387,42 +425,9 @@ video::-webkit-media-controls {
     border-left: 4px solid #2196F3;
 }
 
-.slot-time {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 8px;
-}
-
-.slot-info {
-    padding: 8px 0;
-}
-
-.slot-countdown {
-    border-top: 1px solid #eee;
-    padding-top: 8px;
-    text-align: center;
-}
-
-.time-slot p {
-    margin: 4px 0;
-    line-height: 1.2;
-    font-size: 14px;
-    color: #333;
-}
-
-.countdown {
-    font-weight: bold;
-    color: #333;
-    font-size: 18px;
-}
-
-/* Current session styling */
-.time-slot.current .countdown {
-    color: #4CAF50;
-}
-
-/* Next session styling */
-.time-slot.next .countdown {
-    color: #2196F3;
+.time-slot.upcoming {
+    border-left: 4px solid #9E9E9E;
+    opacity: 0.8;
 }
 
 .schedule-section::before,
