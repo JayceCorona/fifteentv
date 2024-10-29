@@ -210,30 +210,60 @@ document.addEventListener('DOMContentLoaded', function() {
         const seconds = now.getSeconds();
         
         if (minutes % 15 === 0 && seconds === 0) {
-            refreshScheduleGrid();
+            transitionSessions();
         }
     }
 
-    function refreshScheduleGrid() {
+    function transitionSessions() {
         const grid = document.getElementById('schedule-grid');
-        grid.innerHTML = ''; // Clear existing slots
         
-        displayCurrentSession();
-        displayNextSession();
-        
-        // Reset and update navigation
-        grid.style.transform = 'translateX(0)';
-        setupScheduleNavigation();
+        // Mark current session as concluded
+        const currentSlot = grid.querySelector('.time-slot.current');
+        if (currentSlot) {
+            currentSlot.className = 'time-slot concluded';
+            const liveIndicator = currentSlot.querySelector('.slot-countdown');
+            liveIndicator.innerHTML = '<p class="concluded-text">Concluded</p>';
+        }
+
+        // Move 'next' to 'current'
+        const nextSlot = grid.querySelector('.time-slot.next');
+        if (nextSlot) {
+            nextSlot.className = 'time-slot current';
+            const countdown = nextSlot.querySelector('.slot-countdown');
+            countdown.innerHTML = `
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            `;
+        }
+
+        // Move 'upcoming' to 'next' if it exists
+        const upcomingSlot = grid.querySelector('.time-slot.upcoming');
+        if (upcomingSlot) {
+            upcomingSlot.className = 'time-slot next';
+            // Update the countdown data
+            const now = new Date();
+            const nextEndTime = new Date(now);
+            nextEndTime.setMinutes(now.getMinutes() + 15 - (now.getMinutes() % 15), 0, 0);
+            const countdown = upcomingSlot.querySelector('.slot-countdown');
+            countdown.innerHTML = `<p class="countdown" data-end="${nextEndTime.getTime()}">Loading...</p>`;
+        }
+
+        // Add new upcoming slot
+        addNextTimeSegment();
     }
 
     function addNextTimeSegment() {
         const grid = document.getElementById('schedule-grid');
-        const nextSlot = grid.querySelector('.time-slot.next');
-        if (!nextSlot) return;
+        const slots = grid.querySelectorAll('.time-slot');
+        const lastSlot = slots[slots.length - 1];
+        
+        if (!lastSlot) return;
 
-        const nextSlotTimeText = nextSlot.querySelector('.slot-time p').textContent;
-        const nextSlotEndTime = nextSlotTimeText.split(' - ')[1];
-        const endTime = parseTimeString(nextSlotEndTime);
+        const lastTimeText = lastSlot.querySelector('.slot-time p').textContent;
+        const endTimeStr = lastTimeText.split(' - ')[1];
+        const endTime = parseTimeString(endTimeStr);
         const nextSegmentEnd = new Date(endTime.getTime() + 15 * 60000);
 
         const newSlot = document.createElement('div');
@@ -363,4 +393,9 @@ document.addEventListener('DOMContentLoaded', function() {
             nextButton.classList.remove('visible');
         }
     }
+
+    // Update the interval for checking transitions
+    setInterval(() => {
+        updateCountdown();
+    }, 1000);
 }); 
