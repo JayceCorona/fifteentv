@@ -9,30 +9,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
-    // Calculate start time: if past 5 PM, set to 9:00 AM next day; otherwise, nearest 15-minute interval today
+    // Set the start time to 15 minutes from now
     const now = new Date();
-    let startTime = new Date(now);
+    const startTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
 
-    if (now.getHours() >= 17) {
-        // If it's past 5 PM, set start time to 9:00 AM the next day
-        startTime.setDate(startTime.getDate() + 1); // Move to the next day
-        startTime.setHours(9, 0, 0, 0);
-    } else {
-        // Otherwise, set start time to the next 15-minute interval today
-        const minutes = startTime.getMinutes();
-        const remainder = 15 - (minutes % 15);
-        startTime.setMinutes(minutes + remainder, 0, 0);
-    }
-
-    console.log("Calculated start time:", startTime);
+    console.log("First session start time:", startTime);
 
     const slots = [];
 
-    // Generate 15-minute blocks until 5 PM
-    while (startTime.getHours() < 17) { // Generate slots up to 5 PM
-        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 mins later
+    // Generate 15-minute blocks until the end of the day (up to midnight)
+    while (startTime.getHours() < 24) {
+        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 mins before start
 
+        // Calculate countdown from now to 15 minutes before each slot
         const status = now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
 
@@ -41,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function() {
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: status,
             countdown: countdown,
-            price: "Free"
+            price: "Free" // Initial price set to "Free"
         });
 
         console.log("Slot created:", slots[slots.length - 1]);
