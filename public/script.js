@@ -19,12 +19,17 @@ async function initializeStreamChat() {
             body: JSON.stringify({ userId }),
         });
         
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${responseData.error || 'Unknown error'}`);
         }
         
-        const { token } = await response.json();
-        console.log('Token received:', token);
+        console.log('Token received');
+
+        if (!responseData.token) {
+            throw new Error('No token received from server');
+        }
 
         // Initialize Stream Chat client
         console.log('Initializing client...');
@@ -37,7 +42,7 @@ async function initializeStreamChat() {
                 id: userId,
                 name: `User ${userId.slice(-4)}`,
             },
-            token
+            responseData.token
         );
         console.log('User connected successfully');
 
@@ -50,13 +55,17 @@ async function initializeStreamChat() {
         // Initialize the channel
         await channel.watch();
         console.log('Channel initialized successfully');
-
-        // Verify channel is working
-        console.log('Channel state:', channel.state);
-
+        
+        // Set up message handlers
+        setupMessageHandlers();
+        
         return true;
     } catch (error) {
         console.error('Error in initializeStreamChat:', error);
+        // Log more details about the error
+        if (error.response) {
+            console.error('Error response:', await error.response.text());
+        }
         return false;
     }
 }
@@ -536,15 +545,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Direct click handler
         sendButton.onclick = async function() {
             console.log('Send button clicked');
-            const text = messageInput.value.trim();
             
-            if (!text) {
-                console.log('No message text');
+            if (!chatClient || !channel) {
+                console.error('Chat not initialized properly');
+                console.log('Chat client:', chatClient);
+                console.log('Channel:', channel);
                 return;
             }
             
-            if (!channel) {
-                console.error('Channel not initialized');
+            const text = messageInput.value.trim();
+            if (!text) {
+                console.log('No message text');
                 return;
             }
 
@@ -557,7 +568,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log('Message sent:', response);
                 messageInput.value = '';
                 
-                // Manually append message
                 appendMessage({
                     text: text,
                     user: {
@@ -567,8 +577,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 });
             } catch (error) {
                 console.error('Error sending message:', error);
-                console.error('Channel state:', channel?.state);
                 console.error('Chat client state:', chatClient?.state);
+                console.error('Channel state:', channel?.state);
             }
         };
 

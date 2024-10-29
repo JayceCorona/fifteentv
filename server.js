@@ -27,9 +27,18 @@ app.get('/', (req, res) => {
 app.post('/token', async (req, res) => {
     try {
         const { userId } = req.body;
+        console.log('Generating token for user:', userId);
+        
+        if (!process.env.STREAM_API_SECRET) {
+            console.error('STREAM_API_SECRET not found in environment variables');
+            return res.status(500).json({ error: 'Stream API Secret not configured' });
+        }
+
         const token = streamChat.createToken(userId);
+        console.log('Token generated successfully');
         res.json({ token });
     } catch (error) {
+        console.error('Error generating token:', error);
         res.status(500).json({ error: error.message });
     }
 });
