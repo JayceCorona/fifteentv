@@ -9,12 +9,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
-    // Calculate the next 15-minute interval
+    // Calculate the next 15-minute interval, starting from 9 AM if past 5 PM
     const now = new Date();
-    const startTime = new Date(now);
-    const minutes = startTime.getMinutes();
-    const remainder = 15 - (minutes % 15);
-    startTime.setMinutes(minutes + remainder, 0, 0);
+    let startTime = new Date(now);
+
+    if (now.getHours() >= 17) {
+        // If it's past 5 PM, set start time to 9:00 AM the next day
+        startTime.setDate(startTime.getDate() + 1);
+        startTime.setHours(9, 0, 0, 0);
+    } else {
+        // Otherwise, set start time to the next 15-minute interval today
+        const minutes = startTime.getMinutes();
+        const remainder = 15 - (minutes % 15);
+        startTime.setMinutes(minutes + remainder, 0, 0);
+    }
 
     console.log("Calculated start time:", startTime);
 
