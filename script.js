@@ -9,13 +9,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
-    // Calculate the next 15-minute interval, starting from 9 AM if past 5 PM
+    // Calculate start time: if past 5 PM, set to 9:00 AM next day; otherwise, nearest 15-minute interval today
     const now = new Date();
     let startTime = new Date(now);
 
     if (now.getHours() >= 17) {
         // If it's past 5 PM, set start time to 9:00 AM the next day
-        startTime.setDate(startTime.getDate() + 1);
+        startTime.setDate(startTime.getDate() + 1); // Move to the next day
         startTime.setHours(9, 0, 0, 0);
     } else {
         // Otherwise, set start time to the next 15-minute interval today
@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const slots = [];
 
     // Generate 15-minute blocks until 5 PM
-    while (startTime.getHours() < 17) {
-        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
-        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000);
+    while (startTime.getHours() < 17) { // Generate slots up to 5 PM
+        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 mins later
+        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 mins before start
 
         const status = now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         console.log("Slot created:", slots[slots.length - 1]);
 
-        startTime.setTime(endTime.getTime());
+        startTime.setTime(endTime.getTime()); // Move to the next 15-minute slot
     }
 
     console.log("Total slots generated:", slots.length);
