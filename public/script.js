@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             scheduleGrid.appendChild(timeSlot);
         });
-
+ 
         // Setup navigation
         setupScheduleNavigation();
     }
