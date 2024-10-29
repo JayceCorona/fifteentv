@@ -9,21 +9,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
-    // Calculate the next available 15-minute interval based on the current time
+    // Get current time in Central Time and calculate the next 15-minute interval
     const now = new Date();
-    const startTime = new Date(now); // Start with the current time
-    const minutes = startTime.getMinutes();
+    const minutes = now.getMinutes();
     const remainder = 15 - (minutes % 15);
+    const startTime = new Date(now);
     startTime.setMinutes(minutes + remainder, 0, 0); // Set to the nearest upcoming 15-minute segment
 
-    console.log("Next session start time:", startTime);
+    console.log("Calculated start time:", startTime); // Debug log for the correct start time
 
     const slots = [];
 
-    // Generate 15-minute slots until midnight
-    while (startTime.getHours() < 24) {
+    // Generate 15-minute blocks until midnight (or later, as needed)
+    while (startTime.getHours() < 24 || (startTime.getHours() === 23 && startTime.getMinutes() < 59)) {
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
-        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
+        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 mins before start
 
         const status = now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function() {
             price: "Free"
         });
 
-        console.log("Slot created:", slots[slots.length - 1]);
+        console.log("Slot created:", slots[slots.length - 1]); // Log each slot for debugging
 
         startTime.setTime(endTime.getTime()); // Move to the next 15-minute slot
     }
