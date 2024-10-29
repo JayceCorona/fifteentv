@@ -49,22 +49,31 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Total slots generated:", slots.length);
 
     // Render slots in the grid
-    slots.forEach(slot => {
-        const block = document.createElement("div");
-        block.className = "time-slot";
-        block.dataset.status = slot.status;
+   // Render slots in the grid with a max of 4 per row
+slots.forEach((slot, index) => {
+    const block = document.createElement("div");
+    block.className = "time-slot";
+    block.dataset.status = slot.status;
 
-        block.innerHTML = `
-            <p>Time: ${slot.startTime} - ${slot.endTime}</p>
-            <p>Price: ${slot.price}</p>
-            <p>Status: <span>${slot.status === "free" ? "Available" : "Taken"}</span></p>
-            <p>Countdown: <span class="countdown">${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}</span></p>
-        `;
+    block.innerHTML = `
+        <p>Time: ${slot.startTime} - ${slot.endTime}</p>
+        <p>Price: ${slot.price}</p>
+        <p>Status: <span>${slot.status === "free" ? "Available" : "Taken"}</span></p>
+        <p>Countdown: <span class="countdown">${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}</span></p>
+    `;
 
-        grid.appendChild(block);
-    });
+    grid.appendChild(block);
 
-    console.log("Slots rendered to the DOM");
+    // Insert a line break or row wrapper after every 4 slots
+    if ((index + 1) % 4 === 0) {
+        const rowBreak = document.createElement("div");
+        rowBreak.className = "row-break"; // Optional: apply styling to separate rows visually
+        grid.appendChild(rowBreak);
+    }
+});
+
+console.log("Slots rendered to the DOM");
+
 
     // Start countdown for free slots
     function startCountdown() {

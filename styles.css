@@ -63,3 +63,8 @@ button:hover {
     flex-wrap: wrap;
     justify-content: center;
 }
+.row-break {
+    margin-top: 20px; /* Space between rows */
+    width: 100%; /* Ensures the break spans the full grid width */
+    height: 1px; /* Optional: can use padding instead for flexible spacing */
+}
