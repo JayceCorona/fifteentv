@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Script loaded");
 
+    // Initialize schedule grid and navigation
+    setupScheduleGrid();
+
     // Initialize glitch effect
     createGlitchText();
     setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
-
-    // Initialize schedule grid
-    setupScheduleGrid();
 
     // Socket.io setup
     const socket = io();
@@ -106,6 +106,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start countdown timer
         updateCountdown();
         setInterval(updateCountdown, 1000);
+
+        // Add navigation setup
+        setupScheduleNavigation();
+
+        // Add resize listener
+        window.addEventListener('resize', () => {
+            updateNavButtons();
+        });
     }
 
     function displayCurrentSession() {
@@ -204,6 +212,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         displayCurrentSession();
         displayNextSession();
+        
+        // Reset and update navigation
+        grid.style.transform = 'translateX(0)';
+        setupScheduleNavigation();
     }
 
     function addNextTimeSegment() {
@@ -281,4 +293,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
+
+    // Add these functions to your script.js
+    function setupScheduleNavigation() {
+        const scheduleSection = document.querySelector('.schedule-section');
+        const grid = document.getElementById('schedule-grid');
+        
+        // Create navigation buttons if they don't exist
+        if (!document.querySelector('.schedule-nav')) {
+            const prevButton = document.createElement('button');
+            const nextButton = document.createElement('button');
+            
+            prevButton.className = 'schedule-nav prev';
+            nextButton.className = 'schedule-nav next';
+            prevButton.innerHTML = '&#8249;';
+            nextButton.innerHTML = '&#8250;';
+            
+            scheduleSection.appendChild(prevButton);
+            scheduleSection.appendChild(nextButton);
+
+            // Add scroll functionality
+            let scrollPosition = 0;
+            const scrollAmount = 200;
+
+            prevButton.addEventListener('click', () => {
+                scrollPosition = Math.max(scrollPosition - scrollAmount, 0);
+                grid.style.transform = `translateX(-${scrollPosition}px)`;
+                updateNavButtons();
+            });
+
+            nextButton.addEventListener('click', () => {
+                const maxScroll = grid.scrollWidth - scheduleSection.clientWidth + 40; // Add padding
+                scrollPosition = Math.min(scrollPosition + scrollAmount, maxScroll);
+                grid.style.transform = `translateX(-${scrollPosition}px)`;
+                updateNavButtons();
+            });
+        }
+
+        // Check if navigation is needed
+        updateNavButtons();
+    }
+
+    function updateNavButtons() {
+        const scheduleSection = document.querySelector('.schedule-section');
+        const grid = document.getElementById('schedule-grid');
+        const prevButton = document.querySelector('.schedule-nav.prev');
+        const nextButton = document.querySelector('.schedule-nav.next');
+        
+        if (!prevButton || !nextButton) return;
+
+        const totalWidth = grid.scrollWidth;
+        const visibleWidth = scheduleSection.clientWidth;
+        const scrollPosition = Math.abs(parseInt(grid.style.transform?.split('translateX(')[1]) || 0);
+
+        // Show/hide navigation buttons based on scroll position and content width
+        if (totalWidth > visibleWidth) {
+            prevButton.classList.toggle('visible', scrollPosition > 0);
+            nextButton.classList.toggle('visible', scrollPosition < totalWidth - visibleWidth);
+        } else {
+            prevButton.classList.remove('visible');
+            nextButton.classList.remove('visible');
+        }
+    }
 }); 
