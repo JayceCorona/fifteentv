@@ -386,58 +386,11 @@ video::-webkit-media-controls {
 .time-slot {
     min-width: 250px;
     background: white;
-    padding: 12px 12px 8px;
+    padding: 12px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
-.slot-time {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 3px;
-    margin-bottom: 3px;
-}
-
-.slot-info {
-    padding: 3px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.slot-countdown {
-    padding-top: 3px;
-    text-align: center;
-    margin-bottom: 0;
-}
-
-.time-slot p {
-    margin: 2px 0;
-    line-height: 1.1;
-    font-size: 14px;
-    color: #333;
-}
-
-.live-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 0;
-    height: 20px;
-}
-
-.countdown {
-    font-weight: bold;
-    color: #333;
-    font-size: 16px;
-    margin: 0;
-    height: 20px;
-    line-height: 20px;
-}
-
-/* Current and next session specific styles */
 .time-slot.current {
     border-left: 4px solid #4CAF50;
 }
@@ -449,6 +402,60 @@ video::-webkit-media-controls {
 .time-slot.upcoming {
     border-left: 4px solid #9E9E9E;
     opacity: 0.8;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f44336;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #f44336;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.time-slot.current .countdown {
+    color: #ff0000;
+}
+
+.time-slot.next .countdown {
+    color: #2196F3;
+}
+
+.time-slot.concluded {
+    border-left: 4px solid #9e9e9e;
+    opacity: 0.7;
+    background: #f8f8f8;
+}
+
+.time-slot.concluded p {
+    color: #666;
+}
+
+.time-slot.concluded .concluded-text {
+    color: #9e9e9e;
+    font-weight: bold;
+    font-size: 14px;
 }
 
 .schedule-section::before,
@@ -506,64 +513,4 @@ video::-webkit-media-controls {
 
 .schedule-nav.visible {
     display: flex;
-}
-
-/* Add these new styles */
-.live-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #ff0000;
-    font-weight: bold;
-    font-size: 18px;
-}
-
-.live-dot {
-    width: 8px;
-    height: 8px;
-    background-color: #ff0000;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.2);
-        opacity: 0.7;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Update existing styles */
-.time-slot.current .countdown {
-    color: #ff0000;
-}
-
-.time-slot.next .countdown {
-    color: #2196F3;
-}
-
-/* Add these styles for concluded sessions */
-.time-slot.concluded {
-    border-left: 4px solid #9e9e9e;
-    opacity: 0.7;
-    background: #f8f8f8;
-}
-
-.time-slot.concluded p {
-    color: #666;
-}
-
-.time-slot.concluded .concluded-text {
-    color: #9e9e9e;
-    font-weight: bold;
-    font-size: 14px;
 }

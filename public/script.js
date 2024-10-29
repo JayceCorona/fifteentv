@@ -278,47 +278,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         grid.appendChild(newSlot);
     }
 
-    // Add these functions at the top level of your script
-    function createGlitchText() {
-        const staticText = document.querySelector('.static-text');
-        if (!staticText) return;
-        
-        // Split text into individual characters
-        const text = staticText.textContent;
-        staticText.textContent = '';
-        text.split('').forEach(char => {
-            const span = document.createElement('span');
-            span.textContent = char;
-            staticText.appendChild(span);
-        });
-    }
-
-    function intensifyGlitch() {
-        const text = document.querySelector('.static-text');
-        if (!text) return;
-
-        text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
-        text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
-        text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
-
-        setTimeout(() => {
-            text.style.transform = 'translate(0, 0)';
-            text.style.opacity = '1';
-            text.style.letterSpacing = 'normal';
-        }, 100);
-    }
-
-    // Add some CSS for the upcoming slot
-    const style = document.createElement('style');
-    style.textContent = `
-        .time-slot.upcoming {
-            border-left: 4px solid #9E9E9E;
-            opacity: 0.8;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Add these functions to your script.js
     function setupScheduleNavigation() {
         const scheduleSection = document.querySelector('.schedule-section');
         const grid = document.getElementById('schedule-grid');
@@ -379,4 +338,61 @@ document.addEventListener('DOMContentLoaded', async function() {
             nextButton.classList.remove('visible');
         }
     }
+
+    function parseTimeString(timeStr) {
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':');
+        hours = parseInt(hours);
+        
+        if (period === 'PM' && hours !== 12) {
+            hours += 12;
+        }
+        if (period === 'AM' && hours === 12) {
+            hours = 0;
+        }
+        
+        const date = new Date();
+        date.setHours(hours, parseInt(minutes), 0, 0);
+        return date;
+    }
+
+    // Add these functions at the top level of your script
+    function createGlitchText() {
+        const staticText = document.querySelector('.static-text');
+        if (!staticText) return;
+        
+        // Split text into individual characters
+        const text = staticText.textContent;
+        staticText.textContent = '';
+        text.split('').forEach(char => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            staticText.appendChild(span);
+        });
+    }
+
+    function intensifyGlitch() {
+        const text = document.querySelector('.static-text');
+        if (!text) return;
+
+        text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
+        text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
+        text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
+
+        setTimeout(() => {
+            text.style.transform = 'translate(0, 0)';
+            text.style.opacity = '1';
+            text.style.letterSpacing = 'normal';
+        }, 100);
+    }
+
+    // Add some CSS for the upcoming slot
+    const style = document.createElement('style');
+    style.textContent = `
+        .time-slot.upcoming {
+            border-left: 4px solid #9E9E9E;
+            opacity: 0.8;
+        }
+    `;
+    document.head.appendChild(style);
 }); 
