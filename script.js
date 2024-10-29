@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("Script loaded"); // Debugging: Confirm script execution
+    console.log("Script loaded"); // Confirm script execution
 
     const grid = document.getElementById("schedule-grid");
     if (!grid) {
         console.error("Grid element not found");
         return;
-    }     
+    }
 
-    console.log("Grid elsdffffdddement found");
+    console.log("Grid element found");
 
     // Calculate the next 15-minute interval
     const now = new Date();
