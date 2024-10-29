@@ -246,7 +246,7 @@ video::-webkit-media-controls {
 
 .schedule-section {
     height: 25vh;
-    overflow-y: auto;
+    overflow-y: hidden;
     padding: 20px;
     background: #f5f5f5;
     position: relative;
