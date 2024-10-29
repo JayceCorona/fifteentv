@@ -38,12 +38,41 @@ body {
     transform: translate(-50%, -50%);
     color: white;
     font-size: 48px;
-    font-family: monospace;
     font-weight: bold;
     z-index: 2;
-    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-    animation: glitch 0.1s infinite;
-    mix-blend-mode: difference;
+    mix-blend-mode: screen;
+    animation: textGlitch 0.05s infinite;
+}
+
+.static-text::before,
+.static-text::after {
+    content: 'NO SIGNAL';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    mix-blend-mode: screen;
+}
+
+.static-text::before {
+    color: #ff0000;
+    animation: chromaticLeft 0.15s infinite linear alternate-reverse;
+}
+
+.static-text::after {
+    color: #00ff00;
+    animation: chromaticRight 0.15s infinite linear alternate-reverse;
+}
+
+@keyframes chromaticLeft {
+    0% { transform: translate(-4px, 0); }
+    100% { transform: translate(-6px, 0); }
+}
+
+@keyframes chromaticRight {
+    0% { transform: translate(4px, 0); }
+    100% { transform: translate(6px, 0); }
 }
 
 .video-player::before {
@@ -204,7 +233,11 @@ video::-webkit-media-controls {
 }
 
 #schedule-grid {
+    display: flex;
+    gap: 15px;
     height: 100%;
+    transition: transform 0.3s ease;
+    padding-bottom: 15px; /* Space for potential scrollbar */
 }
 
 .chat-section {
@@ -252,17 +285,19 @@ video::-webkit-media-controls {
 }
 
 .time-slot {
-    min-height: 100px;
+    min-width: 200px; /* Fixed width for each slot */
+    height: 180px; /* Fixed height */
+    flex-shrink: 0; /* Prevent slots from shrinking */
     background: white;
     padding: 15px;
-    margin-bottom: 10px;
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .time-slot p {
     margin: 5px 0;
     line-height: 1.4;
-    white-space: normal;
-    overflow: visible;
 }

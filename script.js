@@ -71,25 +71,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Function to display the next available session
     function displayNextSession() {
-        // Keep existing slots and add new one
-        const slots = document.querySelectorAll('.time-slot');
-        if (slots.length >= 2) {
-            // Remove oldest slot if we already have 2
-            slots[0].remove();
-        }
-
-        // Set the start time to the next 15-minute interval from now
         const now = new Date();
         const minutes = now.getMinutes();
         const remainder = 15 - (minutes % 15);
-        let startTime = new Date(now);
-        startTime.setMinutes(minutes + remainder, 0, 0);
+        
+        // Get the latest slot's end time if it exists
+        const slots = document.querySelectorAll('.time-slot');
+        let startTime;
+        
+        if (slots.length > 0) {
+            // Parse the last slot's end time and add 15 minutes
+            const lastSlotTimeText = slots[slots.length - 1].querySelector('.slot-time').textContent;
+            const endTimeStr = lastSlotTimeText.split(' - ')[1];
+            const [hours, minutes] = endTimeStr.split(':').map(num => parseInt(num));
+            
+            startTime = new Date(now);
+            startTime.setHours(hours);
+            startTime.setMinutes(minutes);
+            startTime.setSeconds(0);
+            startTime.setMilliseconds(0);
+        } else {
+            // If no slots exist, use next 15-minute interval
+            startTime = new Date(now);
+            startTime.setMinutes(minutes + remainder, 0, 0);
+        }
 
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
         const countdownTarget = new Date(startTime.getTime() - 1 * 60 * 1000);
         const countdown = Math.floor((countdownTarget - now) / 1000);
 
-        // Create new slot
         const slot = {
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -103,16 +113,41 @@ document.addEventListener("DOMContentLoaded", function() {
         block.dataset.status = slot.status;
 
         block.innerHTML = `
-            <p>Time: ${slot.startTime} - ${slot.endTime}</p>
-            <p>Price: ${slot.price}</p>
-            <p>Status: <span>${slot.status}</span></p>
-            <p>Countdown: <span class="countdown">${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}</span></p>
+            <div class="slot-time">
+                <p>Time: ${slot.startTime} - ${slot.endTime}</p>
+            </div>
+            <div class="slot-info">
+                <p>Price: ${slot.price}</p>
+                <p>Status: <span>${slot.status}</span></p>
+            </div>
+            <div class="slot-countdown">
+                <p>Countdown: <span class="countdown">
+                    ${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}
+                </span></p>
+            </div>
         `;
 
         grid.appendChild(block);
 
+        // Calculate scroll position
+        const gridWidth = grid.scrollWidth;
+        const containerWidth = grid.parentElement.offsetWidth;
+        const maxScroll = gridWidth - containerWidth;
+        
+        // Smooth scroll to show the newest slot
+        grid.scrollTo({
+            left: maxScroll,
+            behavior: 'smooth'
+        });
+
         if (slot.status === "Available") {
             startCountdown(block, slot.countdown);
+        }
+
+        // Remove old slots if we have too many
+        const allSlots = document.querySelectorAll('.time-slot');
+        if (allSlots.length > 10) { // Keep last 10 slots
+            allSlots[0].remove();
         }
     }
 
@@ -128,8 +163,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 slotElement.querySelector("span").textContent = "Taken";
                 slotElement.style.backgroundColor = "#ffd7d7";
 
-                // Add next session while keeping current one
-                displayNextSession();
+                // Add next session after a short delay
+                setTimeout(() => {
+                    displayNextSession();
+                }, 1000);
             } else {
                 timeLeft--;
                 countdownElem.textContent = formatCountdown(timeLeft);
@@ -277,4 +314,43 @@ document.addEventListener("DOMContentLoaded", function() {
             intensifyGlitch();
         }
     }, 100);
+
+    // Add touch/mouse drag scrolling
+    function enableDragScroll(element) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        element.addEventListener('mousedown', (e) => {
+            isDown = true;
+            element.style.cursor = 'grabbing';
+            startX = e.pageX - element.offsetLeft;
+            scrollLeft = element.scrollLeft;
+        });
+
+        element.addEventListener('mouseleave', () => {
+            isDown = false;
+            element.style.cursor = 'grab';
+        });
+
+        element.addEventListener('mouseup', () => {
+            isDown = false;
+            element.style.cursor = 'grab';
+        });
+
+        element.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - element.offsetLeft;
+            const walk = (x - startX) * 2;
+            element.scrollLeft = scrollLeft - walk;
+        });
+    }
+
+    // Initialize drag scroll
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('schedule-grid');
+        enableDragScroll(grid);
+        grid.style.cursor = 'grab';
+    });
 });
