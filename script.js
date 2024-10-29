@@ -537,4 +537,33 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
+
+    function updateTimeSlots() {
+        const now = new Date();
+        slots.forEach((slot, index) => {
+            const timeRemaining = Math.max(0, (slot.startTime - now) / 1000);
+            
+            if (timeRemaining <= 0) {
+                // Remove the expired slot
+                slots.splice(index, 1);
+                // Add a new slot at the end
+                const lastSlot = slots[slots.length - 1];
+                const newSlotTime = new Date(lastSlot.startTime.getTime() + 15 * 60 * 1000); // 15 minutes after the last slot
+                slots.push({
+                    startTime: newSlotTime,
+                    available: true
+                });
+                // Regenerate all slots
+                generateTimeSlots();
+            } else {
+                // Update existing slot countdown
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = Math.floor(timeRemaining % 60);
+                const countdownElement = document.querySelector(`#slot-${index} .countdown`);
+                if (countdownElement) {
+                    countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+        });
+    }
 });
