@@ -83,3 +83,4 @@ document.addEventListener("DOMContentLoaded", function() {
     // Display the initial session when the page loads
     displayNextSession();
 });
+
