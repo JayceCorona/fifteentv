@@ -70,10 +70,8 @@ button:hover {
 }
 
 .content-wrapper {
-    position: relative;
-    min-height: 100vh;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 350px;  /* Right column fixed at 350px */
     grid-template-rows: 1fr 1fr;
     gap: 20px;
     padding: 20px;
