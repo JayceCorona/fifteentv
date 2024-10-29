@@ -10,8 +10,8 @@ const io = socketIo(server);
 
 // Initialize Stream Chat with your API credentials
 const streamChat = new StreamChat(
-    'g9m53zqntv69',  // Your API key
-    process.env.STREAM_API_SECRET  // Your API secret from Heroku config
+    'g9m53zqntv69',
+    'ks322sn88gqcjjtssqbwz7bfnvzbxvm9s4nh8xt3qj7vcqzhxfqutym6bha4hdey'
 );
 
 // Serve static files
@@ -29,26 +29,13 @@ app.post('/token', async (req, res) => {
         const { userId } = req.body;
         console.log('Generating token for user:', userId);
         
-        if (!process.env.STREAM_API_SECRET) {
-            console.error('STREAM_API_SECRET not found in environment variables');
-            return res.status(500).json({ error: 'Stream API Secret not configured' });
-        }
-
         const token = streamChat.createToken(userId);
-        console.log('Token generated successfully');
+        console.log('Token generated successfully:', token);
         res.json({ token });
     } catch (error) {
         console.error('Error generating token:', error);
         res.status(500).json({ error: error.message });
     }
-});
-
-// Socket.io connection handling (if you still want to keep it)
-io.on('connection', (socket) => {
-    console.log('A user connected');
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
 });
 
 const PORT = process.env.PORT || 3000;
