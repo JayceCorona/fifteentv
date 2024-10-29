@@ -1,3 +1,4 @@
+import { StreamChat } from 'stream-chat';
 document.addEventListener("DOMContentLoaded", function() {
     console.log("Script loaded");
 
@@ -8,6 +9,44 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     console.log("Grid element found");
+
+
+
+const apiKey = 'YOUR_STREAM_API_KEY';
+const client = new StreamChat(apiKey);
+
+async function initializeChat() {
+    await client.connectUser({
+        id: 'user-id',
+        name: 'Test User',
+    }, client.devToken('user-id'));
+
+    const channel = client.channel('messaging', 'general', {
+        name: 'General Chat',
+    });
+
+    await channel.watch();
+
+    channel.on('message.new', (event) => {
+        const chatBox = document.getElementById('chat-box');
+        const newMessage = document.createElement('p');
+        newMessage.textContent = `${event.user.name}: ${event.message.text}`;
+        chatBox.appendChild(newMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const message = input.value;
+        if (message.trim() !== "") {
+            await channel.sendMessage({ text: message });
+            input.value = ''; // Clear the input field
+        }
+    });
+}
+
+initializeChat();
 
     // Add this at the top of your DOMContentLoaded event listener
     const video = document.getElementById('mainPlayer');
