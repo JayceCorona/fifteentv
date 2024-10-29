@@ -171,23 +171,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const endTime = parseInt(countdown.dataset.end);
             if (isNaN(endTime)) return;
 
-            const timeLeft = endTime - now;
+            const countdownEndTime = endTime - 60000; // 60000ms = 1 minute
+            const timeLeft = countdownEndTime - now;
             
-            // If less than 1 minute remains
-            if (timeLeft <= 60000) {
-                countdown.textContent = 'Starting Soon...';
-                return;
-            }
-            
-            // If time is up
             if (timeLeft <= 0) {
-                setupScheduleGrid(); // Refresh the schedule grid
+                countdown.textContent = 'Starting Soon...';
                 return;
             }
 
             const minutes = Math.floor(timeLeft / (1000 * 60));
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            if (timeLeft <= 10000) {
+                countdown.style.color = '#ff0000'; // Optional: make countdown red in final seconds
+            }
         });
     }
 
