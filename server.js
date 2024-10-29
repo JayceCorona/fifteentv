@@ -6,6 +6,16 @@ const io = require('socket.io')(http);
 // Serve static files from the current directory
 app.use(express.static('./'));
 
+// Add a specific route for your main page
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+// Keep your existing routes here
+app.get('/api/schedule', (req, res) => {
+    // Your existing schedule route logic
+});
+
 // Store connected users
 const users = new Set();
 
