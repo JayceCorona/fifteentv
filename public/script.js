@@ -245,58 +245,53 @@ document.addEventListener('DOMContentLoaded', async function() {
         const grid = document.getElementById('schedule-grid');
         if (!grid) return;
 
-        // Find current and next slots
-        const currentSlot = grid.querySelector('.time-slot.current');
-        const nextSlot = grid.querySelector('.time-slot.next');
+        // Clear all existing slots
+        grid.innerHTML = '';
 
-        if (currentSlot) {
-            // Update current slot to concluded
-            currentSlot.className = 'time-slot concluded';
-            const liveIndicator = currentSlot.querySelector('.slot-countdown');
-            if (liveIndicator) {
-                liveIndicator.innerHTML = '<p class="concluded-text">Concluded</p>';
-            }
-            currentSlot.style.opacity = '0.6';
-        }
+        // Create current slot
+        const now = new Date();
+        const currentSlotStart = new Date(now);
+        currentSlotStart.setMinutes(now.getMinutes() - (now.getMinutes() % 15), 0, 0);
+        const currentSlotEnd = new Date(currentSlotStart.getTime() + 15 * 60000);
 
-        if (nextSlot) {
-            // Update next slot to current/live
-            nextSlot.className = 'time-slot current';
-            const countdown = nextSlot.querySelector('.slot-countdown');
-            if (countdown) {
-                countdown.innerHTML = `
-                    <div class="live-indicator">
-                        <div class="live-dot"></div>
-                        <span>LIVE</span>
-                    </div>
-                `;
-            }
-
-            // Get the end time of the now-current slot
-            const slotTimeText = nextSlot.querySelector('.slot-time p').textContent;
-            const endTimeStr = slotTimeText.split(' - ')[1];
-            const endTime = parseTimeString(endTimeStr);
-            
-            // Create new next slot for the following 15-minute period
-            const newSlotEnd = new Date(endTime.getTime() + 15 * 60000);
-            
-            const newSlot = document.createElement('div');
-            newSlot.className = 'time-slot next';
-            newSlot.innerHTML = `
-                <div class="slot-time">
-                    <p>Next: ${formatTimeString(endTime)} - ${formatTimeString(newSlotEnd)}</p>
+        const currentSlot = document.createElement('div');
+        currentSlot.className = 'time-slot current';
+        currentSlot.innerHTML = `
+            <div class="slot-time">
+                <p>Current: ${formatTimeString(currentSlotStart)} - ${formatTimeString(currentSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Active</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
                 </div>
-                <div class="slot-info">
-                    <p>Status: Upcoming</p>
-                    <p>Price: Free</p>
-                </div>
-                <div class="slot-countdown">
-                    <p class="countdown" data-end="${endTime.getTime()}">Loading...</p>
-                </div>
-            `;
+            </div>
+        `;
+        grid.appendChild(currentSlot);
 
-            grid.appendChild(newSlot);
-        }
+        // Create next slot
+        const nextSlotStart = currentSlotEnd;
+        const nextSlotEnd = new Date(nextSlotStart.getTime() + 15 * 60000);
+
+        const nextSlot = document.createElement('div');
+        nextSlot.className = 'time-slot next';
+        nextSlot.innerHTML = `
+            <div class="slot-time">
+                <p>Next: ${formatTimeString(nextSlotStart)} - ${formatTimeString(nextSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Upcoming</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <p class="countdown" data-end="${nextSlotStart.getTime()}">Loading...</p>
+            </div>
+        `;
+        grid.appendChild(nextSlot);
     }
 
     function refreshScheduleGrid() {
