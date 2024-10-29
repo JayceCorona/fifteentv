@@ -271,10 +271,32 @@ document.addEventListener('DOMContentLoaded', async function() {
                     </div>
                 `;
             }
-        }
 
-        // Add a new next slot
-        displayNextSession();
+            // Get the end time of the now-current slot
+            const slotTimeText = nextSlot.querySelector('.slot-time p').textContent;
+            const endTimeStr = slotTimeText.split(' - ')[1];
+            const endTime = parseTimeString(endTimeStr);
+            
+            // Create new next slot for the following 15-minute period
+            const newSlotEnd = new Date(endTime.getTime() + 15 * 60000);
+            
+            const newSlot = document.createElement('div');
+            newSlot.className = 'time-slot next';
+            newSlot.innerHTML = `
+                <div class="slot-time">
+                    <p>Next: ${formatTimeString(endTime)} - ${formatTimeString(newSlotEnd)}</p>
+                </div>
+                <div class="slot-info">
+                    <p>Status: Upcoming</p>
+                    <p>Price: Free</p>
+                </div>
+                <div class="slot-countdown">
+                    <p class="countdown" data-end="${endTime.getTime()}">Loading...</p>
+                </div>
+            `;
+
+            grid.appendChild(newSlot);
+        }
     }
 
     function refreshScheduleGrid() {
