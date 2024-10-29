@@ -19,7 +19,7 @@ body {
 }
 
 .video-section {
-    flex: 0 0 75%;
+    flex: 1;
     position: relative;
 }
 
@@ -245,7 +245,8 @@ video::-webkit-media-controls {
 }
 
 .schedule-section {
-    flex: 0 0 25%;
+    min-height: fit-content;
+    max-height: 280px;
     overflow-y: hidden;
     padding: 20px;
     background: #f5f5f5;
@@ -343,7 +344,8 @@ video::-webkit-media-controls {
 
 .time-slot {
     min-width: min(200px, calc(33% - 15px));
-    height: 240px;
+    height: auto;
+    min-height: 180px;
     flex-shrink: 0;
     background: white;
     padding: 20px;
