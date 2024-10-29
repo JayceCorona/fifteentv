@@ -220,6 +220,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         checkSessionTransition();
     }
 
+    function formatTimeString(date) {
+        return date.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: true 
+        });
+    }
+
     function checkSessionTransition() {
         const now = new Date();
         const minutes = now.getMinutes();
@@ -268,14 +276,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         `;
 
         grid.appendChild(newSlot);
-    }
-
-    function formatTimeString(date) {
-        return date.toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            hour12: true 
-        });
     }
 
     // Add these functions at the top level of your script
