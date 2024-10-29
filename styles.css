@@ -17,7 +17,7 @@ body {
 }
 
 .video-section {
-    height: 75%;
+    height: 85%;
 }
 
 .video-player {
@@ -242,7 +242,7 @@ video::-webkit-media-controls {
 }
 
 .schedule-section {
-    height: 25%;
+    height: 15%;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 20px;
