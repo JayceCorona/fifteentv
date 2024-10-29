@@ -12,41 +12,51 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-const apiKey = 'YOUR_STREAM_API_KEY';
-const client = new StreamChat(apiKey);
+// Initialize Stream Chat client with your API Key
+const apiKey = g9m53zqntv69;  // Replace with your actual API Key from Stream
+const client = new StreamChat.StreamChat(apiKey);
 
 async function initializeChat() {
+    // Connect the user to Stream Chat with a development token (replace 'user-id' with a unique ID)
     await client.connectUser({
-        id: 'user-id',
-        name: 'Test User',
-    }, client.devToken('user-id'));
+        id: 'user-id',  // Replace with a unique ID for each user
+        name: 'Test User',  // Replace with the user's name or username
+    }, client.devToken('user-id'));  // Development token for testing purposes
 
+    // Create or join a chat channel
     const channel = client.channel('messaging', 'general', {
         name: 'General Chat',
     });
 
-    await channel.watch();
+    await channel.watch();  // Begin watching the channel for real-time events
 
+    // Listen for new messages in the channel
     channel.on('message.new', (event) => {
         const chatBox = document.getElementById('chat-box');
         const newMessage = document.createElement('p');
         newMessage.textContent = `${event.user.name}: ${event.message.text}`;
         chatBox.appendChild(newMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the latest message
     });
 
+    // Send a message when the form is submitted
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault();  // Prevent form from reloading the page
         const input = document.getElementById('chat-input');
         const message = input.value;
-        if (message.trim() !== "") {
-            await channel.sendMessage({ text: message });
-            input.value = ''; // Clear the input field
+
+        if (message.trim() !== "") {  // Ensure the message isn't empty
+            await channel.sendMessage({ text: message });  // Send the message to the channel
+            input.value = '';  // Clear the input field after sending
         }
     });
 }
 
+// Initialize chat functionality on page load
 initializeChat();
+
+
+
 
     // Add this at the top of your DOMContentLoaded event listener
     const video = document.getElementById('mainPlayer');
