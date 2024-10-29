@@ -13,11 +13,11 @@ body {
 .left-side {
     display: flex;
     flex-direction: column;
-    width: 70%;
+    width: 80%;
 }
 
 .video-section {
-    height: 85%;
+    height: 80%;
 }
 
 .video-player {
