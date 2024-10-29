@@ -77,13 +77,54 @@ function setupScheduleGrid() {
         console.error("Grid element not found");
         return;
     }
-    displayNextSession(); // Call the function to display a session
+
+    // Add initial time slots
+    for (let i = 0; i < 5; i++) {
+        displayNextSession();
+    }
+
+    // Add navigation buttons
+    const scheduleSection = document.querySelector('.schedule-section');
+    const prevButton = document.createElement('button');
+    const nextButton = document.createElement('button');
+    
+    prevButton.className = 'schedule-nav prev';
+    nextButton.className = 'schedule-nav next';
+    prevButton.innerHTML = '&#8249;';
+    nextButton.innerHTML = '&#8250;';
+    
+    scheduleSection.appendChild(prevButton);
+    scheduleSection.appendChild(nextButton);
+
+    // Add scroll functionality
+    let scrollPosition = 0;
+    const scrollAmount = 200;
+
+    prevButton.addEventListener('click', () => {
+        scrollPosition = Math.max(scrollPosition - scrollAmount, 0);
+        grid.style.transform = `translateX(-${scrollPosition}px)`;
+        updateNavButtons();
+    });
+
+    nextButton.addEventListener('click', () => {
+        const maxScroll = grid.scrollWidth - grid.clientWidth;
+        scrollPosition = Math.min(scrollPosition + scrollAmount, maxScroll);
+        grid.style.transform = `translateX(-${scrollPosition}px)`;
+        updateNavButtons();
+    });
+
+    function updateNavButtons() {
+        prevButton.classList.toggle('hidden', scrollPosition === 0);
+        nextButton.classList.toggle('hidden', 
+            scrollPosition >= grid.scrollWidth - grid.clientWidth);
+    }
+
+    // Initial button state
+    updateNavButtons();
 }
 
 // Function to calculate and display the next available session
 function displayNextSession() {
-    console.log("Display next session called");
-
     const grid = document.getElementById('schedule-grid');
     if (!grid) {
         console.error("Error: #schedule-grid element not found.");
@@ -91,53 +132,57 @@ function displayNextSession() {
     }
 
     const now = new Date();
+    const slots = grid.querySelectorAll('.time-slot');
     let startTime;
 
-    // Calculate start time for the next session based on existing slots
-    const slots = grid.querySelectorAll('.time-slot');
-    if (slots.length > 0) {
-        const lastSlotTimeText = slots[slots.length - 1].querySelector('.slot-time p').textContent;
-        const endTimeStr = lastSlotTimeText.split(' - ')[1];
-        const [hours, minutes] = endTimeStr.split(':').map(num => parseInt(num));
-
-        startTime = new Date(now);
-        startTime.setHours(hours);
-        startTime.setMinutes(minutes);
-        startTime.setSeconds(0);
-    } else {
-        // Set to the next 15-minute interval if there are no existing slots
+    if (slots.length === 0) {
+        // First slot starts at the next 15-minute interval
         const minutes = now.getMinutes();
         const remainder = 15 - (minutes % 15);
         startTime = new Date(now);
         startTime.setMinutes(minutes + remainder, 0, 0);
+    } else {
+        // Get the end time of the last slot and add 15 minutes
+        const lastSlot = slots[slots.length - 1];
+        const lastTimeText = lastSlot.querySelector('.slot-time p').textContent;
+        const endTimeStr = lastTimeText.split(' - ')[1];
+        startTime = parseTimeString(endTimeStr);
     }
 
-    const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+    const endTime = new Date(startTime.getTime() + 15 * 60000);
 
-    const slot = {
-        startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        price: "Free",
-        status: "Available"
-    };
-
-    // Create slot element
-    const block = document.createElement("div");
-    block.className = "time-slot";
-    block.dataset.status = slot.status;
-
-    block.innerHTML = `
+    const slot = document.createElement('div');
+    slot.className = 'time-slot';
+    slot.innerHTML = `
         <div class="slot-time">
-            <p>Time: ${slot.startTime} - ${slot.endTime}</p>
+            <p>Time: ${formatTimeString(startTime)} - ${formatTimeString(endTime)}</p>
         </div>
         <div class="slot-info">
-            <p>Price: ${slot.price}</p>
-            <p>Status: <span>${slot.status}</span></p>
+            <p>Status: Available</p>
+            <p>Price: Free</p>
+        </div>
+        <div class="slot-countdown">
+            <p class="countdown">Book Now</p>
         </div>
     `;
 
-    grid.appendChild(block); // Add new slot to the grid
-    console.log("New time slot added:", slot);
+    grid.appendChild(slot);
+}
+
+// Helper functions
+function parseTimeString(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+}
+
+function formatTimeString(date) {
+    return date.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+    });
 }
 
 // Glitch Effect
