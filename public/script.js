@@ -8,23 +8,31 @@ function setupChat() {
     const chatMessages = document.getElementById('chatMessages');
 
     if (sendButton && messageInput && chatMessages) {
-        function addMessage(text) {
+        async function handleSend() {
+            const text = messageInput.value.trim();
+            if (text && channel) {
+                try {
+                    // Send message through Stream
+                    await channel.sendMessage({
+                        text: text
+                    });
+                    messageInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+        }
+
+        // Modified addMessage function to handle Stream messages
+        window.addMessage = function(text, isOutgoing = false) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message outgoing';
+            messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
             messageDiv.innerHTML = `
                 <div class="text">${text}</div>
                 <div class="timestamp">${new Date().toLocaleTimeString()}</div>
             `;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function handleSend() {
-            const text = messageInput.value.trim();
-            if (text) {
-                addMessage(text);
-                messageInput.value = '';
-            }
         }
 
         sendButton.addEventListener('click', handleSend);
