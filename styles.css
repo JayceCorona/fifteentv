@@ -364,7 +364,7 @@ video::-webkit-media-controls {
 
 .slot-time {
     flex: 1;
-    padding-bottom: 12px;
+    padding-bottom: 12px;  /* Reduced from original */
     border-bottom: 1px solid #eee;
     display: flex;
     flex-direction: column;
@@ -373,7 +373,7 @@ video::-webkit-media-controls {
 
 .slot-info {
     flex: 1;
-    padding: 12px 0;
+    padding: 12px 0;  /* Reduced from original */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -381,7 +381,7 @@ video::-webkit-media-controls {
 
 .slot-countdown {
     flex: 1;
-    padding-top: 12px;
+    padding-top: 12px;  /* Reduced from original */
     border-top: 1px solid #eee;
     display: flex;
     flex-direction: column;
