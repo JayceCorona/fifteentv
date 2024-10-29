@@ -192,6 +192,77 @@ function appendMessage(message) {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("Script loaded");
     
+    // Initialize Stream Chat first
+    const chatInitialized = await initializeStreamChat();
+    console.log('Chat initialization result:', chatInitialized);
+
+    // Schedule initialization
+    const scheduleGrid = document.getElementById('schedule-grid');
+    if (scheduleGrid) {
+        console.log('Setting up schedule grid');
+        setupSchedule();
+    }
+
+    // Chat button handler
+    const sendButton = document.getElementById('sendButton');
+    const messageInput = document.getElementById('messageInput');
+
+    if (sendButton && messageInput) {
+        console.log('Setting up chat handlers');
+        
+        sendButton.onclick = async function() {
+            console.log('Send button clicked');
+            
+            if (!chatClient || !channel) {
+                console.error('Chat not initialized properly');
+                console.error('Chat client:', chatClient);
+                console.error('Channel:', channel);
+                return;
+            }
+            
+            const text = messageInput.value.trim();
+            if (!text) {
+                console.log('No message text');
+                return;
+            }
+
+            try {
+                console.log('Sending message:', text);
+                const response = await channel.sendMessage({
+                    text: text
+                });
+                
+                console.log('Message sent:', response);
+                messageInput.value = '';
+                
+                appendMessage({
+                    text: text,
+                    user: {
+                        name: `User ${chatClient.user.id.slice(-4)}`
+                    },
+                    created_at: new Date()
+                });
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+        messageInput.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        };
+    }
+});
+
+// Schedule setup function
+function setupSchedule() {
+    const grid = document.getElementById('schedule-grid');
+    const currentTime = new Date();
+    
+    // Your existing schedule setup code here
+    // ... (keep all your existing schedule code)
+}
     // Check Stream Chat SDK
     if (typeof StreamChat === 'undefined') {
         console.error('StreamChat SDK not loaded!');
@@ -624,4 +695,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
         console.error('Chat elements not found');
     }
-}); 
