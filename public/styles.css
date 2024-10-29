@@ -294,17 +294,24 @@ video::-webkit-media-controls {
 }
 
 .chat-section {
-    width: 350px;
+    width: 20%;
+    height: 100vh;
     border-left: 1px solid #ddd;
     display: flex;
     flex-direction: column;
-    background: white;
+    background: #fff;
 }
 
-.chat-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+.chat-header {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    background: #f8f9fa;
+}
+
+.chat-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 16px;
 }
 
 .chat-messages {
@@ -317,39 +324,44 @@ video::-webkit-media-controls {
 }
 
 .message {
-    padding: 10px;
+    padding: 8px 12px;
     border-radius: 8px;
     max-width: 85%;
-    background: #f8f9fa;
-    margin-bottom: 8px;
-    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.message.incoming {
+    background: #f1f1f1;
+    align-self: flex-start;
+}
+
+.message.outgoing {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
 }
 
 .message .username {
+    font-size: 0.8em;
     font-weight: bold;
-    color: #007bff;
-    font-size: 0.9em;
+    margin-bottom: 4px;
 }
 
 .message .timestamp {
-    color: #666;
-    font-size: 0.8em;
+    font-size: 0.7em;
+    opacity: 0.7;
     margin-left: 5px;
 }
 
-.message .text {
-    margin-top: 5px;
-}
-
-.chat-input {
+.chat-input-container {
     padding: 15px;
     border-top: 1px solid #ddd;
     background: #f8f9fa;
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
-.chat-input input {
+.chat-input-container input {
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #ddd;
@@ -357,7 +369,7 @@ video::-webkit-media-controls {
     font-size: 14px;
 }
 
-.chat-input button {
+.chat-input-container button {
     padding: 8px 16px;
     background: #007bff;
     color: white;
@@ -367,7 +379,7 @@ video::-webkit-media-controls {
     font-size: 14px;
 }
 
-.chat-input button:hover {
+.chat-input-container button:hover {
     background: #0056b3;
 }
 

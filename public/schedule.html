@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Your Slot - Fifteen.tv</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Remove Stream Chat SDK -->
+    <!-- Add Stream Chat SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/stream-chat@latest/dist/browser/stream-chat.min.js"></script>
 </head>
 <body>  
     <div class="content-wrapper">
@@ -41,6 +42,20 @@
                 </div>
             </section>
         </div>
+
+        <!-- New Chat Section -->
+        <section class="chat-section">
+            <div class="chat-header">
+                <h3>Live Chat</h3>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will appear here -->
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button id="sendButton">Send</button>
+            </div>
+        </section>
     </div>
 
     <script src="script.js"></script>
