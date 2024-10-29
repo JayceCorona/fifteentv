@@ -1,222 +1,401 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', function() {
     console.log("Script loaded");
 
-    // Stream Chat setup
-    initializeStreamChat();
+    // Initialize schedule grid and navigation
+    setupScheduleGrid();
 
-    // Video controls and other UI functionality
-    setupVideoControls();
-    setupScheduleGrid(); // Set up the grid
-    enableDragScroll(document.getElementById('schedule-grid'));
-
-    // Glitch effect
+    // Initialize glitch effect
     createGlitchText();
-    setInterval(intensifyGlitch, 1000);
-    setupChatInterface();
+    setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
 
-    // Window resize listener for adjusting slots
-    handleResize();
-});
+    // Socket.io setup
+    const socket = io();
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
 
-// Initialize Stream Chat client and channel
-function initializeStreamChat() {
-    const apiKey = 'g9m53zqntv69';  // Replace with your actual API Key from Stream
-    const client = new StreamChat.StreamChat(apiKey);
-
-    async function startChat() {
-        await client.connectUser({ id: 'user-id', name: 'Test User' }, client.devToken('user-id'));
-        const channel = client.channel('messaging', 'general', { name: 'General Chat' });
-        await channel.watch();
-
-        channel.on('message.new', (event) => {
-            const chatBox = document.getElementById('chat-box');
-            const newMessage = document.createElement('p');
-            newMessage.textContent = `${event.user.name}: ${event.message.text}`;
-            chatBox.appendChild(newMessage);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        document.getElementById('chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            if (input.value.trim() !== "") {
-                await channel.sendMessage({ text: input.value });
-                input.value = '';
-            }
-        });
-    }
-    startChat();
-}
-
-// Video controls setup
-function setupVideoControls() {
+    // Video player elements
     const video = document.getElementById('mainPlayer');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const muteBtn = document.getElementById('muteBtn');
     const volumeSlider = document.getElementById('volumeSlider');
+    const progress = document.getElementById('progress');
     const currentTimeSpan = document.getElementById('currentTime');
     const durationSpan = document.getElementById('duration');
-    const progressBar = document.querySelector('.progress-bar');
-    const progress = document.getElementById('progress');
-    
-    video.src = 'path/to/your/video.mp4';
 
-    playPauseBtn.addEventListener('click', () => togglePlay(video, playPauseBtn));
-    muteBtn.addEventListener('click', () => toggleMute(video, muteBtn));
-    volumeSlider.addEventListener('input', (e) => video.volume = e.target.value);
-
-    video.addEventListener('timeupdate', () => updateProgress(video, progress, currentTimeSpan));
-    video.addEventListener('loadedmetadata', () => durationSpan.textContent = formatTime(video.duration));
-    progressBar.addEventListener('click', (e) => seekVideo(e, video, progressBar));
-}
-
-// Schedule grid setup
-function setupScheduleGrid() {
-    const grid = document.getElementById("schedule-grid");
-    if (!grid) {
-        console.error("Grid element not found");
-        return;
+    // Chat functionality
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message) {
+            socket.emit('chat message', message);
+            messageInput.value = '';
+        }
     }
 
-    // Add initial time slots
-    for (let i = 0; i < 5; i++) {
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    socket.on('chat message', (msg) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `
+            <span class="username">User ${msg.userId.slice(0, 4)}</span>
+            <span class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+            <div class="text">${msg.text}</div>
+        `;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    // Video player functionality
+    playPauseBtn.addEventListener('click', () => {
+        if (video.paused) {
+            video.play();
+            playPauseBtn.textContent = 'Pause';
+        } else {
+            video.pause();
+            playPauseBtn.textContent = 'Play';
+        }
+    });
+
+    muteBtn.addEventListener('click', () => {
+        video.muted = !video.muted;
+        muteBtn.textContent = video.muted ? 'Unmute' : 'Mute';
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+        video.volume = e.target.value;
+    });
+
+    video.addEventListener('timeupdate', () => {
+        const percent = (video.currentTime / video.duration) * 100;
+        progress.style.width = `${percent}%`;
+        currentTimeSpan.textContent = formatTime(video.currentTime);
+    });
+
+    video.addEventListener('loadedmetadata', () => {
+        durationSpan.textContent = formatTime(video.duration);
+    });
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        seconds = Math.floor(seconds % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Schedule Grid Functions
+    function setupScheduleGrid() {
+        console.log("Setting up schedule grid");
+        const grid = document.getElementById("schedule-grid");
+        if (!grid) {
+            console.error("Grid element not found");
+            return;
+        }
+
+        // Clear existing content
+        grid.innerHTML = '';
+
+        // Add current and next session
+        displayCurrentSession();
         displayNextSession();
+
+        // Start countdown timer
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Add navigation setup
+        setupScheduleNavigation();
+
+        // Add resize listener
+        window.addEventListener('resize', () => {
+            updateNavButtons();
+        });
     }
 
-    // Add navigation buttons
-    const scheduleSection = document.querySelector('.schedule-section');
-    const prevButton = document.createElement('button');
-    const nextButton = document.createElement('button');
-    
-    prevButton.className = 'schedule-nav prev';
-    nextButton.className = 'schedule-nav next';
-    prevButton.innerHTML = '&#8249;';
-    nextButton.innerHTML = '&#8250;';
-    
-    scheduleSection.appendChild(prevButton);
-    scheduleSection.appendChild(nextButton);
-
-    // Add scroll functionality
-    let scrollPosition = 0;
-    const scrollAmount = 200;
-
-    prevButton.addEventListener('click', () => {
-        scrollPosition = Math.max(scrollPosition - scrollAmount, 0);
-        grid.style.transform = `translateX(-${scrollPosition}px)`;
-        updateNavButtons();
-    });
-
-    nextButton.addEventListener('click', () => {
-        const maxScroll = grid.scrollWidth - grid.clientWidth;
-        scrollPosition = Math.min(scrollPosition + scrollAmount, maxScroll);
-        grid.style.transform = `translateX(-${scrollPosition}px)`;
-        updateNavButtons();
-    });
-
-    function updateNavButtons() {
-        prevButton.classList.toggle('hidden', scrollPosition === 0);
-        nextButton.classList.toggle('hidden', 
-            scrollPosition >= grid.scrollWidth - grid.clientWidth);
-    }
-
-    // Initial button state
-    updateNavButtons();
-}
-
-// Function to calculate and display the next available session
-function displayNextSession() {
-    const grid = document.getElementById('schedule-grid');
-    if (!grid) {
-        console.error("Error: #schedule-grid element not found.");
-        return;
-    }
-
-    const now = new Date();
-    const slots = grid.querySelectorAll('.time-slot');
-    let startTime;
-
-    if (slots.length === 0) {
-        // First slot starts at the next 15-minute interval
+    function displayCurrentSession() {
+        const grid = document.getElementById('schedule-grid');
+        const now = new Date();
         const minutes = now.getMinutes();
-        const remainder = 15 - (minutes % 15);
-        startTime = new Date(now);
-        startTime.setMinutes(minutes + remainder, 0, 0);
-    } else {
-        // Get the end time of the last slot and add 15 minutes
+        const currentSlotStart = new Date(now);
+        currentSlotStart.setMinutes(minutes - (minutes % 15), 0, 0);
+        const currentSlotEnd = new Date(currentSlotStart.getTime() + 15 * 60000);
+
+        // Check if previous session exists and mark it as concluded
+        const previousSlot = grid.querySelector('.time-slot.current');
+        if (previousSlot) {
+            previousSlot.className = 'time-slot concluded';
+            const countdownDiv = previousSlot.querySelector('.slot-countdown');
+            countdownDiv.innerHTML = '<p class="concluded-text">Concluded</p>';
+        }
+
+        const slot = document.createElement('div');
+        slot.className = 'time-slot current';
+        slot.innerHTML = `
+            <div class="slot-time">
+                <p>Current: ${formatTimeString(currentSlotStart)} - ${formatTimeString(currentSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Active</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(slot);
+    }
+
+    function displayNextSession() {
+        const grid = document.getElementById('schedule-grid');
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const currentSlotEnd = new Date(now);
+        currentSlotEnd.setMinutes(minutes - (minutes % 15) + 15, 0, 0);
+        const nextSlotEnd = new Date(currentSlotEnd.getTime() + 15 * 60000);
+
+        const slot = document.createElement('div');
+        slot.className = 'time-slot next';
+        slot.innerHTML = `
+            <div class="slot-time">
+                <p>Next: ${formatTimeString(currentSlotEnd)} - ${formatTimeString(nextSlotEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Upcoming</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <p class="countdown" data-end="${currentSlotEnd.getTime()}">Loading...</p>
+            </div>
+        `;
+
+        grid.appendChild(slot);
+    }
+
+    function updateCountdown() {
+        const countdowns = document.querySelectorAll('.time-slot.next .countdown');
+        const now = new Date().getTime();
+
+        countdowns.forEach(countdown => {
+            const endTime = parseInt(countdown.dataset.end);
+            if (isNaN(endTime)) return;
+
+            const countdownEndTime = endTime - 60000; // 60000ms = 1 minute
+            const timeLeft = countdownEndTime - now;
+            
+            if (timeLeft <= 0) {
+                countdown.textContent = 'Starting Soon...';
+                addNextTimeSegment();
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+
+        checkSessionTransition();
+    }
+
+    function checkSessionTransition() {
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        
+        if (minutes % 15 === 0 && seconds === 0) {
+            transitionSessions();
+        }
+    }
+
+    function transitionSessions() {
+        const grid = document.getElementById('schedule-grid');
+        
+        // Mark current session as concluded
+        const currentSlot = grid.querySelector('.time-slot.current');
+        if (currentSlot) {
+            currentSlot.className = 'time-slot concluded';
+            const liveIndicator = currentSlot.querySelector('.slot-countdown');
+            liveIndicator.innerHTML = '<p class="concluded-text">Concluded</p>';
+        }
+
+        // Move 'next' to 'current'
+        const nextSlot = grid.querySelector('.time-slot.next');
+        if (nextSlot) {
+            nextSlot.className = 'time-slot current';
+            const countdown = nextSlot.querySelector('.slot-countdown');
+            countdown.innerHTML = `
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            `;
+        }
+
+        // Move 'upcoming' to 'next' if it exists
+        const upcomingSlot = grid.querySelector('.time-slot.upcoming');
+        if (upcomingSlot) {
+            upcomingSlot.className = 'time-slot next';
+            // Update the countdown data
+            const now = new Date();
+            const nextEndTime = new Date(now);
+            nextEndTime.setMinutes(now.getMinutes() + 15 - (now.getMinutes() % 15), 0, 0);
+            const countdown = upcomingSlot.querySelector('.slot-countdown');
+            countdown.innerHTML = `<p class="countdown" data-end="${nextEndTime.getTime()}">Loading...</p>`;
+        }
+
+        // Add new upcoming slot
+        addNextTimeSegment();
+    }
+
+    function addNextTimeSegment() {
+        const grid = document.getElementById('schedule-grid');
+        const slots = grid.querySelectorAll('.time-slot');
         const lastSlot = slots[slots.length - 1];
+        
+        if (!lastSlot) return;
+
         const lastTimeText = lastSlot.querySelector('.slot-time p').textContent;
         const endTimeStr = lastTimeText.split(' - ')[1];
-        startTime = parseTimeString(endTimeStr);
+        const endTime = parseTimeString(endTimeStr);
+        const nextSegmentEnd = new Date(endTime.getTime() + 15 * 60000);
+
+        const newSlot = document.createElement('div');
+        newSlot.className = 'time-slot upcoming';
+        newSlot.innerHTML = `
+            <div class="slot-time">
+                <p>Upcoming: ${formatTimeString(endTime)} - ${formatTimeString(nextSegmentEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Scheduled</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <p>Scheduled</p>
+            </div>
+        `;
+
+        grid.appendChild(newSlot);
     }
 
-    const endTime = new Date(startTime.getTime() + 15 * 60000);
+    function formatTimeString(date) {
+        return date.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: true 
+        });
+    }
 
-    const slot = document.createElement('div');
-    slot.className = 'time-slot';
-    slot.innerHTML = `
-        <div class="slot-time">
-            <p>Time: ${formatTimeString(startTime)} - ${formatTimeString(endTime)}</p>
-        </div>
-        <div class="slot-info">
-            <p>Status: Available</p>
-            <p>Price: Free</p>
-        </div>
-        <div class="slot-countdown">
-            <p class="countdown">Book Now</p>
-        </div>
+    // Add these functions at the top level of your script
+    function createGlitchText() {
+        const staticText = document.querySelector('.static-text');
+        if (!staticText) return;
+        
+        // Split text into individual characters
+        const text = staticText.textContent;
+        staticText.textContent = '';
+        text.split('').forEach(char => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            staticText.appendChild(span);
+        });
+    }
+
+    function intensifyGlitch() {
+        const text = document.querySelector('.static-text');
+        if (!text) return;
+
+        text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
+        text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
+        text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
+
+        setTimeout(() => {
+            text.style.transform = 'translate(0, 0)';
+            text.style.opacity = '1';
+            text.style.letterSpacing = 'normal';
+        }, 100);
+    }
+
+    // Add some CSS for the upcoming slot
+    const style = document.createElement('style');
+    style.textContent = `
+        .time-slot.upcoming {
+            border-left: 4px solid #9E9E9E;
+            opacity: 0.8;
+        }
     `;
+    document.head.appendChild(style);
 
-    grid.appendChild(slot);
-}
+    // Add these functions to your script.js
+    function setupScheduleNavigation() {
+        const scheduleSection = document.querySelector('.schedule-section');
+        const grid = document.getElementById('schedule-grid');
+        
+        // Create navigation buttons if they don't exist
+        if (!document.querySelector('.schedule-nav')) {
+            const prevButton = document.createElement('button');
+            const nextButton = document.createElement('button');
+            
+            prevButton.className = 'schedule-nav prev';
+            nextButton.className = 'schedule-nav next';
+            prevButton.innerHTML = '&#8249;';
+            nextButton.innerHTML = '&#8250;';
+            
+            scheduleSection.appendChild(prevButton);
+            scheduleSection.appendChild(nextButton);
 
-// Helper functions
-function parseTimeString(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date;
-}
+            // Add scroll functionality
+            let scrollPosition = 0;
+            const scrollAmount = 200;
 
-function formatTimeString(date) {
-    return date.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
-    });
-}
+            prevButton.addEventListener('click', () => {
+                scrollPosition = Math.max(scrollPosition - scrollAmount, 0);
+                grid.style.transform = `translateX(-${scrollPosition}px)`;
+                updateNavButtons();
+            });
 
-// Glitch Effect
-function createGlitchText() {
-    const text = document.querySelector('.static-text');
-    if (!text) {
-        console.error("Static text element for glitch effect not found.");
-        return;
+            nextButton.addEventListener('click', () => {
+                const maxScroll = grid.scrollWidth - scheduleSection.clientWidth + 40; // Add padding
+                scrollPosition = Math.min(scrollPosition + scrollAmount, maxScroll);
+                grid.style.transform = `translateX(-${scrollPosition}px)`;
+                updateNavButtons();
+            });
+        }
+
+        // Check if navigation is needed
+        updateNavButtons();
     }
-    text.style.fontFamily = 'monospace';
-    text.style.position = 'relative';
-    text.style.overflow = 'hidden';
-}
 
-function intensifyGlitch() {
-    const text = document.querySelector('.static-text');
-    if (!text) return;
+    function updateNavButtons() {
+        const scheduleSection = document.querySelector('.schedule-section');
+        const grid = document.getElementById('schedule-grid');
+        const prevButton = document.querySelector('.schedule-nav.prev');
+        const nextButton = document.querySelector('.schedule-nav.next');
+        
+        if (!prevButton || !nextButton) return;
 
-    text.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px) skew(${Math.random() * 2 - 1}deg)`;
-    text.style.opacity = Math.random() < 0.8 ? '1' : '0.8';
-    text.style.letterSpacing = Math.random() < 0.5 ? '2px' : 'normal';
+        const totalWidth = grid.scrollWidth;
+        const visibleWidth = scheduleSection.clientWidth;
+        const scrollPosition = Math.abs(parseInt(grid.style.transform?.split('translateX(')[1]) || 0);
 
-    setTimeout(() => {
-        text.style.transform = 'translate(0, 0)'; // Reset transform
-        text.style.opacity = '1';
-        text.style.letterSpacing = 'normal';
-    }, 100);
-}
+        // Show/hide navigation buttons based on scroll position and content width
+        if (totalWidth > visibleWidth) {
+            prevButton.classList.toggle('visible', scrollPosition > 0);
+            nextButton.classList.toggle('visible', scrollPosition < totalWidth - visibleWidth);
+        } else {
+            prevButton.classList.remove('visible');
+            nextButton.classList.remove('visible');
+        }
+    }
 
-// Utility Functions for Video
-function togglePlay(video, playPauseBtn) { /* ... */ }
-function toggleMute(video, muteBtn) { /* ... */ }
-function updateProgress(video, progress, currentTimeSpan) { /* ... */ }
-function seekVideo(e, video, progressBar) { /* ... */ }
-function formatTime(seconds) { /* ... */ }
-function enableDragScroll(element) { /* ... */ }
-function handleResize() { /* Resize logic for slots */ }
+    // Update the interval for checking transitions
+    setInterval(() => {
+        updateCountdown();
+    }, 1000);
+}); 
