@@ -100,3 +100,63 @@ button:hover {
     margin-bottom: 10px;
     border-radius: 5px;
 }
+
+.video-player {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+video {
+    width: 100%;
+    background: #000;
+}
+
+.video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-btn {
+    background: transparent;
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#volumeSlider {
+    width: 100px;
+}
+
+.time-display {
+    color: #fff;
+    margin: 0 10px;
+}
+
+.progress-bar {
+    flex-grow: 1;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    position: relative;
+}
+
+#progress {
+    height: 100%;
+    background: #fff;
+    width: 0%;
+}

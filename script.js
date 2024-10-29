@@ -9,6 +9,66 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
+    // Add this at the top of your DOMContentLoaded event listener
+    const video = document.getElementById('mainPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const currentTimeSpan = document.getElementById('currentTime');
+    const durationSpan = document.getElementById('duration');
+    const progressBar = document.querySelector('.progress-bar');
+    const progress = document.getElementById('progress');
+
+    // Set video source (replace with your video URL)
+    video.src = 'path/to/your/video.mp4';
+
+    // Play/Pause
+    playPauseBtn.addEventListener('click', () => {
+        if (video.paused) {
+            video.play();
+            playPauseBtn.textContent = 'Pause';
+        } else {
+            video.pause();
+            playPauseBtn.textContent = 'Play';
+        }
+    });
+
+    // Mute
+    muteBtn.addEventListener('click', () => {
+        video.muted = !video.muted;
+        muteBtn.textContent = video.muted ? 'Unmute' : 'Mute';
+    });
+
+    // Volume
+    volumeSlider.addEventListener('input', (e) => {
+        video.volume = e.target.value;
+    });
+
+    // Time update
+    video.addEventListener('timeupdate', () => {
+        const percent = (video.currentTime / video.duration) * 100;
+        progress.style.width = `${percent}%`;
+        currentTimeSpan.textContent = formatTime(video.currentTime);
+    });
+
+    // Video duration
+    video.addEventListener('loadedmetadata', () => {
+        durationSpan.textContent = formatTime(video.duration);
+    });
+
+    // Click on progress bar
+    progressBar.addEventListener('click', (e) => {
+        const pos = (e.pageX - progressBar.offsetLeft) / progressBar.offsetWidth;
+        video.currentTime = pos * video.duration;
+    });
+
+    // Helper function to format time
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        seconds = Math.floor(seconds % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
     // Function to display the next available session
     function displayNextSession() {
         grid.innerHTML = ""; // Clear the grid to show only one session

@@ -7,11 +7,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Schedule Your Slot 2</h1>
+    <h1>Schedule Your Slot 1</h1>
     <div class="content-wrapper">
         <section class="video-section">
-            <h2>Upcoming Livestreams 1</h2>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/bAN3KmTSy2Q" allowfullscreen></iframe>
+            <h2>Upcoming Livestreams</h2>
+            <div class="video-player">
+                <video id="mainPlayer" playsinline>
+                    <source src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="video-controls">
+                    <button id="playPauseBtn" class="control-btn">Play</button>
+                    <button id="muteBtn" class="control-btn">Mute</button>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress"></div>
+                    </div>
+                </div>
+            </div>
         </section>
         <section class="schedule-section">
             <h2>Available Time Slots</h2>
