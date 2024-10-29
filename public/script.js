@@ -91,21 +91,57 @@ document.addEventListener('DOMContentLoaded', function() {
             
             async function sendMessage() {
                 const text = messageInput.value.trim();
-                if (text && channel) {
-                    try {
-                        console.log('Sending message:', text);
-                        await channel.sendMessage({
-                            text: text,
-                        });
-                        messageInput.value = '';
-                    } catch (error) {
-                        console.error('Error sending message:', error);
-                    }
+                console.log('Attempting to send message:', text);
+                
+                if (!text) {
+                    console.log('No message to send');
+                    return;
+                }
+                
+                if (!channel) {
+                    console.error('Chat channel not initialized');
+                    return;
+                }
+
+                try {
+                    // Clear input immediately for better UX
+                    const messageText = text;
+                    messageInput.value = '';
+                    
+                    console.log('Sending message to channel...');
+                    const response = await channel.sendMessage({
+                        text: messageText
+                    });
+                    
+                    console.log('Message sent successfully:', response);
+                    
+                    // Manually append message if needed
+                    appendMessage({
+                        text: messageText,
+                        user: {
+                            name: `User ${chatClient.user.id.slice(-4)}`
+                        },
+                        created_at: new Date()
+                    });
+                    
+                } catch (error) {
+                    console.error('Failed to send message:', error);
+                    // Optionally show error to user
+                    messageInput.value = text; // Restore message if failed
                 }
             }
 
-            sendButton.onclick = sendMessage;
-            messageInput.onkeypress = function(e) {
+            // Remove any existing event listeners
+            sendButton.replaceWith(sendButton.cloneNode(true));
+            messageInput.replaceWith(messageInput.cloneNode(true));
+            
+            // Get fresh references after replacing elements
+            const newSendButton = document.getElementById('sendButton');
+            const newMessageInput = document.getElementById('messageInput');
+            
+            // Add new event listeners
+            newSendButton.onclick = sendMessage;
+            newMessageInput.onkeypress = function(e) {
                 if (e.key === 'Enter') {
                     sendMessage();
                 }
