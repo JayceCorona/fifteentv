@@ -17,7 +17,9 @@ async function initializeStreamChat() {
         const { token } = await response.json();
 
         // Initialize Stream Chat client
-        chatClient = StreamChat.getInstance('g9m53zqntv69'); // Your actual API key
+        chatClient = StreamChat.getInstance('g9m53zqntv69');
+        
+        // Connect user
         await chatClient.connectUser(
             {
                 id: userId,
@@ -30,6 +32,8 @@ async function initializeStreamChat() {
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat',
         });
+        
+        // Initialize the channel
         await channel.watch();
 
         // Set up message listener
@@ -37,37 +41,58 @@ async function initializeStreamChat() {
             appendMessage(event.message);
         });
 
-        // Remove the old Socket.IO message handling
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
+        // Set up message sending
+        setupMessageHandlers();
 
-        async function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text) {
-                try {
-                    await channel.sendMessage({ text });
-                    messageInput.value = '';
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
-            }
-        }
-
-        // Update event listeners
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
+        console.log('Stream Chat initialized successfully');
     } catch (error) {
         console.error('Error initializing chat:', error);
     }
 }
 
+function setupMessageHandlers() {
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    if (!messageInput || !sendButton) {
+        console.error('Chat input elements not found');
+        return;
+    }
+
+    async function sendMessage() {
+        const text = messageInput.value.trim();
+        if (text && channel) {
+            try {
+                await channel.sendMessage({
+                    text: text,
+                });
+                messageInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+    }
+
+    // Add click event listener
+    sendButton.addEventListener('click', sendMessage);
+
+    // Add enter key event listener
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    console.log('Message handlers set up successfully');
+}
+
 function appendMessage(message) {
     const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) {
+        console.error('Chat messages container not found');
+        return;
+    }
+
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
     messageDiv.innerHTML = `
@@ -79,11 +104,16 @@ function appendMessage(message) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// Make sure this is in your DOMContentLoaded event
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Script loaded");
     
     // Initialize Stream Chat
-    initializeStreamChat();
+    initializeStreamChat().then(() => {
+        console.log('Chat initialization completed');
+    }).catch(error => {
+        console.error('Chat initialization failed:', error);
+    });
     
     // Initialize schedule grid and navigation
     setupScheduleGrid();
