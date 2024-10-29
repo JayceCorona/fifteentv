@@ -14,24 +14,26 @@ document.addEventListener("DOMContentLoaded", function() {
     const minutes = now.getMinutes();
     const remainder = 15 - (minutes % 15);
     let startTime = new Date(now);
-    startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
+    startTime.setMinutes(minutes + remainder, 0, 0); // Set to next 15-minute segment
 
-    console.log("Next available segment start time:", startTime);
+    console.log("Calculated start time:", startTime);
 
     // Define the end limit as 24 hours from `now`
     const endLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+    console.log("End limit:", endLimit);
+
     const slots = [];
-    let countdownStarted = false; // Track when the first available slot is found
 
     // Generate 15-minute slots up to 24 hours from `now`
     while (startTime < endLimit) {
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
 
-        // Mark the first upcoming slot as "free" with a countdown; all others as "taken"
-        const status = !countdownStarted ? "free" : "taken";
+        // Set the first 4 slots as taken
+        const index = slots.length;
+        const status = index < 4 ? "taken" : now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
-        const price = status === "free" ? "Free" : "$0.01";
+        const price = index < 4 ? "$0.01" : "Free"; // Set price if needed for the taken slots
 
         slots.push({
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -43,17 +45,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         console.log("Slot created:", slots[slots.length - 1]);
 
-        // Only the first "free" slot should have the countdown
-        if (status === "free") countdownStarted = true;
-
         // Advance startTime by 15 minutes
         startTime = new Date(startTime.getTime() + 15 * 60 * 1000);
     }
 
     console.log("Total slots generated:", slots.length);
 
-    // Render slots in the grid
-    slots.forEach(slot => {
+    // Render slots in the grid with a max of 4 per row
+    slots.forEach((slot, index) => {
         const block = document.createElement("div");
         block.className = "time-slot";
         block.dataset.status = slot.status;
@@ -66,29 +65,37 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
 
         grid.appendChild(block);
+
+        // Insert a row break after every 4 slots
+        if ((index + 1) % 4 === 0) {
+            const rowBreak = document.createElement("div");
+            rowBreak.className = "row-break";
+            grid.appendChild(rowBreak);
+        }
     });
 
     console.log("Slots rendered to the DOM");
 
-    // Start countdown only for the first available slot
+    // Start countdown for free slots
     function startCountdown() {
-        const countdownElem = document.querySelector(".time-slot[data-status='free'] .countdown");
-        if (countdownElem) {
-            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) || parseInt(countdownElem.textContent, 10);
+        const slots = document.querySelectorAll(".time-slot[data-status='free']");
+        slots.forEach(slot => {
+            const countdownElem = slot.querySelector(".countdown");
+            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) || parseInt(slot.dataset.countdown, 10);
 
             const timer = setInterval(() => {
                 if (isNaN(timeLeft) || timeLeft <= 0) {
                     clearInterval(timer);
                     countdownElem.textContent = "Auction Ended";
-                    countdownElem.closest(".time-slot").dataset.status = "taken";
-                    countdownElem.closest(".time-slot").querySelector("span").textContent = "Taken";
-                    countdownElem.closest(".time-slot").style.backgroundColor = "#ffd7d7";
+                    slot.dataset.status = "taken";
+                    slot.querySelector("span").textContent = "Taken";
+                    slot.style.backgroundColor = "#ffd7d7";
                 } else {
                     timeLeft--;
                     countdownElem.textContent = formatCountdown(timeLeft);
                 }
             }, 1000);
-        }
+        });
     }
 
     startCountdown();
