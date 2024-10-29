@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Add this line
     setupChat();
 
+    // Make sure this line is here and not commented out
+    setupScheduleGrid();
+
     // Initialize Stream Chat
     await initializeStreamChat();
 
