@@ -4,13 +4,13 @@ body {
     height: 100vh;
     overflow: hidden;
 }
-
+ 
 .content-wrapper {
     display: flex;
     height: 100vh;
     width: 100vw;
 }
-
+ 
 .left-side {
     flex: 1;
     display: flex;
@@ -273,51 +273,52 @@ video::-webkit-media-controls {
 }
 
 .schedule-section {
-    height: 150px;
-    min-height: fit-content;
-    overflow-y: hidden;
-    padding: 20px;
-    background: #f5f5f5;
+    height: 200px;
     position: relative;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
+    background: #f5f5f5;
+    padding: 20px;
+    overflow: hidden;
 }
 
 #schedule-grid {
     display: flex;
     gap: 20px;
-    height: min-content;
-    padding: 0 20px;
+    transition: transform 0.3s ease;
+}
+
+.time-slot {
+    min-width: 200px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .chat-section {
-    width: 350px;
+    width: 300px;
+    height: 100%;
     border-left: 1px solid #ddd;
     display: flex;
     flex-direction: column;
 }
 
 .chat-container {
-    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
 .chat-messages {
-    flex-grow: 1;
+    flex: 1;
     overflow-y: auto;
     padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .message {
     background: #f8f9fa;
     padding: 10px;
     border-radius: 4px;
-    max-width: 85%;
+    margin-bottom: 8px;
 }
 
 .message .username {
@@ -327,12 +328,12 @@ video::-webkit-media-controls {
 }
 
 .message .timestamp {
-    font-size: 0.8em;
     color: #6c757d;
+    font-size: 0.8em;
 }
 
 .message .text {
-    margin-top: 5px;
+    margin-top: 4px;
     word-break: break-word;
 }
 
@@ -346,10 +347,11 @@ video::-webkit-media-controls {
 
 .chat-input {
     padding: 15px;
-    background: #f5f5f5;
     border-top: 1px solid #ddd;
     display: flex;
     gap: 10px;
+    background: white;
+    z-index: 1;
 }
 
 .chat-input input {
@@ -360,12 +362,16 @@ video::-webkit-media-controls {
 }
 
 .chat-input button {
-    padding: 8px 15px;
+    padding: 8px 16px;
     background: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.chat-input button:hover {
+    background: #0056b3;
 }
 
 .time-slot {
@@ -376,6 +382,8 @@ video::-webkit-media-controls {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+    margin: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .slot-time {
@@ -455,9 +463,40 @@ video::-webkit-media-controls {
     background: linear-gradient(-90deg, #f5f5f5 0%, transparent 100%);
 }
 
-/* Remove navigation buttons since we only show two slots */
+/* Navigation buttons */
 .schedule-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 3;
     display: none;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+}
+
+.schedule-nav.prev {
+    left: 10px;
+}
+
+.schedule-nav.next {
+    right: 10px;
+}
+
+.schedule-nav:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.schedule-nav.visible {
+    display: block;
 }
 
 /* Add these new styles */
@@ -501,4 +540,21 @@ video::-webkit-media-controls {
 
 .time-slot.next .countdown {
     color: #2196F3;
+}
+
+/* Add these styles for concluded sessions */
+.time-slot.concluded {
+    border-left: 4px solid #9e9e9e;
+    opacity: 0.7;
+    background: #f8f8f8;
+}
+
+.time-slot.concluded p {
+    color: #666;
+}
+
+.time-slot.concluded .concluded-text {
+    color: #9e9e9e;
+    font-weight: bold;
+    font-size: 14px;
 }
