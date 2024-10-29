@@ -171,4 +171,23 @@ document.addEventListener("DOMContentLoaded", function() {
             sendButton.click();
         }
     });
+
+    const videoPlayer = document.querySelector('.video-player');
+
+    video.addEventListener('playing', () => {
+        videoPlayer.classList.add('playing');
+    });
+
+    video.addEventListener('pause', () => {
+        videoPlayer.classList.remove('playing');
+    });
+
+    video.addEventListener('ended', () => {
+        videoPlayer.classList.remove('playing');
+    });
+
+    // Also handle when there's no source
+    video.addEventListener('emptied', () => {
+        videoPlayer.classList.remove('playing');
+    });
 });
