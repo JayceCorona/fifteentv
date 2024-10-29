@@ -342,7 +342,7 @@ video::-webkit-media-controls {
 }
 
 .time-slot {
-    min-width: min(200px, calc(33% - 15px));
+    min-width: min(240px, calc(33% - 15px));
     height: 70%;
     flex-shrink: 0;
     background: white;
