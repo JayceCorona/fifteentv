@@ -194,19 +194,87 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Add this to your existing JavaScript to make the text glitch more dramatic occasionally
+    const fonts = [
+        'monospace',
+        'VT323',
+        'Press Start 2P',
+        'Courier New',
+        'Monaco',
+        'Consolas',
+        'OCR A Std',
+        'Terminal'
+    ];
+
+    const glitchTexts = [
+        'NO SIGNAL',
+        'NO S1GNAL',
+        'N0 SIGNAL',
+        'NO SI6NAL',
+        'NO_SIGNAL',
+        'NOSIGNAL',
+        'NO.SIGNAL',
+        '[NO SIGNAL]'
+    ];
+
     function intensifyGlitch() {
         const text = document.querySelector('.static-text');
-        text.style.animation = 'none';
-        text.offsetHeight; // Trigger reflow
-        text.style.animation = 'glitch 0.1s infinite';
         
-        setTimeout(() => {
+        // Random font change
+        text.style.fontFamily = fonts[Math.floor(Math.random() * fonts.length)];
+        
+        // Random text variation
+        if (Math.random() < 0.3) { // 30% chance to change text
+            text.textContent = glitchTexts[Math.floor(Math.random() * glitchTexts.length)];
+        }
+        
+        // Random glitch effects
+        const glitchEffect = Math.random();
+        if (glitchEffect < 0.2) {
+            // Major glitch
+            text.style.transform = `translate(-50%, -50%) skew(${Math.random() * 10 - 5}deg)`;
+            text.style.letterSpacing = `${Math.random() * 10 - 5}px`;
+            text.style.opacity = Math.random() * 0.5 + 0.5;
+            
+            setTimeout(() => {
+                text.style.transform = 'translate(-50%, -50%)';
+                text.style.letterSpacing = 'normal';
+                text.style.opacity = '1';
+            }, 100);
+        } else if (glitchEffect < 0.4) {
+            // Flicker
             text.style.opacity = '0';
             setTimeout(() => {
                 text.style.opacity = '1';
-            }, 100);
-        }, Math.random() * 2000);
+            }, 50);
+        }
+        
+        // Occasionally split the text into RGB channels more dramatically
+        if (Math.random() < 0.2) {
+            text.style.textShadow = `
+                ${-Math.random() * 10}px 0 #ff0000,
+                ${Math.random() * 10}px ${Math.random() * 10}px #0000ff,
+                ${Math.random() * 5}px ${-Math.random() * 5}px #00ff00
+            `;
+            
+            setTimeout(() => {
+                text.style.textShadow = '-2px 0 #ff0000, 2px 2px #0000ff';
+            }, 150);
+        }
     }
 
-    setInterval(intensifyGlitch, 3000);
+    // Add this to your head section to load the Google Fonts
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
+
+    // Run the glitch effect more frequently
+    setInterval(intensifyGlitch, 1000);
+
+    // Add random micro-glitches more frequently
+    setInterval(() => {
+        if (Math.random() < 0.3) { // 30% chance of micro-glitch
+            intensifyGlitch();
+        }
+    }, 100);
 });
