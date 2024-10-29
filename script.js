@@ -9,51 +9,32 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Grid element found");
 
-    // Set the start time to the next 15-minute interval from now
-    const now = new Date();
-    const minutes = now.getMinutes();
-    const remainder = 15 - (minutes % 15);
-    let startTime = new Date(now);
-    startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
+    // Function to display the next available session
+    function displayNextSession() {
+        grid.innerHTML = ""; // Clear the grid to show only one session
 
-    console.log("Next available segment start time:", startTime);
+        // Set the start time to the next 15-minute interval from now
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const remainder = 15 - (minutes % 15);
+        let startTime = new Date(now);
+        startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
 
-    // Define the end limit as 24 hours from `now`
-    const endLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
-    const slots = [];
-    let countdownStarted = false; // Track when the first available slot is found
-
-    // Generate 15-minute slots up to 24 hours from `now`
-    while (startTime < endLimit) {
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
+        const countdown = Math.floor((countdownTarget - now) / 1000);
 
-        // Mark the first upcoming slot as "free" with a countdown; all others as "taken"
-        const status = !countdownStarted ? "free" : "taken";
-        const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
-        const price = status === "free" ? "Free" : "$0.01";
-
-        slots.push({
+        // Create a single session slot
+        const slot = {
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            status: status,
-            countdown: countdown,
-            price: price
-        });
+            countdown: countdown > 0 ? countdown : 0,
+            price: "Free",
+            status: "Available"
+        };
 
-        console.log("Slot created:", slots[slots.length - 1]);
+        console.log("Next session created:", slot);
 
-        // Only the first "free" slot should have the countdown
-        if (status === "free") countdownStarted = true;
-
-        // Advance startTime by 15 minutes
-        startTime = new Date(startTime.getTime() + 15 * 60 * 1000);
-    }
-
-    console.log("Total slots generated:", slots.length);
-
-    // Render slots in the grid
-    slots.forEach(slot => {
         const block = document.createElement("div");
         block.className = "time-slot";
         block.dataset.status = slot.status;
@@ -61,41 +42,44 @@ document.addEventListener("DOMContentLoaded", function() {
         block.innerHTML = `
             <p>Time: ${slot.startTime} - ${slot.endTime}</p>
             <p>Price: ${slot.price}</p>
-            <p>Status: <span>${slot.status === "free" ? "Available" : "Taken"}</span></p>
+            <p>Status: <span>${slot.status}</span></p>
             <p>Countdown: <span class="countdown">${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}</span></p>
         `;
 
         grid.appendChild(block);
-    });
 
-    console.log("Slots rendered to the DOM");
-
-    // Start countdown only for the first available slot
-    function startCountdown() {
-        const countdownElem = document.querySelector(".time-slot[data-status='free'] .countdown");
-        if (countdownElem) {
-            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) || parseInt(countdownElem.textContent, 10);
-
-            const timer = setInterval(() => {
-                if (isNaN(timeLeft) || timeLeft <= 0) {
-                    clearInterval(timer);
-                    countdownElem.textContent = "Auction Ended";
-                    countdownElem.closest(".time-slot").dataset.status = "taken";
-                    countdownElem.closest(".time-slot").querySelector("span").textContent = "Taken";
-                    countdownElem.closest(".time-slot").style.backgroundColor = "#ffd7d7";
-                } else {
-                    timeLeft--;
-                    countdownElem.textContent = formatCountdown(timeLeft);
-                }
-            }, 1000);
-        }
+        // Start the countdown for this session
+        startCountdown(block, slot.countdown);
     }
 
-    startCountdown();
+    // Function to start and handle countdown for a given session
+    function startCountdown(slotElement, timeLeft) {
+        const countdownElem = slotElement.querySelector(".countdown");
 
+        const timer = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                countdownElem.textContent = "Auction Ended";
+                slotElement.dataset.status = "taken";
+                slotElement.querySelector("span").textContent = "Taken";
+                slotElement.style.backgroundColor = "#ffd7d7";
+
+                // Display the next session after countdown ends
+                setTimeout(displayNextSession, 1000); // Small delay before displaying the next session
+            } else {
+                timeLeft--;
+                countdownElem.textContent = formatCountdown(timeLeft);
+            }
+        }, 1000);
+    }
+
+    // Helper function to format countdown in mm:ss
     function formatCountdown(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
+
+    // Display the initial session when the page loads
+    displayNextSession();
 });
