@@ -127,7 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Price: Free</p>
             </div>
             <div class="slot-countdown">
-                <p class="countdown" data-end="${currentSlotEnd.getTime()}">In Progress</p>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
             </div>
         `;
 
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCountdown() {
-        const countdowns = document.querySelectorAll('.countdown');
+        const countdowns = document.querySelectorAll('.time-slot.next .countdown');
         const now = new Date().getTime();
 
         countdowns.forEach(countdown => {
@@ -169,9 +172,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isNaN(endTime)) return;
 
             const timeLeft = endTime - now;
+            
+            // If less than 1 minute remains
+            if (timeLeft <= 60000) {
+                countdown.textContent = 'Starting Soon...';
+                return;
+            }
+            
+            // If time is up
             if (timeLeft <= 0) {
-                // Refresh the schedule grid when a slot ends
-                setupScheduleGrid();
+                setupScheduleGrid(); // Refresh the schedule grid
                 return;
             }
 
