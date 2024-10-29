@@ -176,17 +176,62 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (timeLeft <= 0) {
                 countdown.textContent = 'Starting Soon...';
+                addNextTimeSegment();
                 return;
             }
 
             const minutes = Math.floor(timeLeft / (1000 * 60));
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-            if (timeLeft <= 10000) {
-                countdown.style.color = '#ff0000'; // Optional: make countdown red in final seconds
-            }
         });
+
+        checkSessionTransition();
+    }
+
+    function checkSessionTransition() {
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        
+        if (minutes % 15 === 0 && seconds === 0) {
+            refreshScheduleGrid();
+        }
+    }
+
+    function refreshScheduleGrid() {
+        const grid = document.getElementById('schedule-grid');
+        grid.innerHTML = ''; // Clear existing slots
+        
+        displayCurrentSession();
+        displayNextSession();
+    }
+
+    function addNextTimeSegment() {
+        const grid = document.getElementById('schedule-grid');
+        const nextSlot = grid.querySelector('.time-slot.next');
+        if (!nextSlot) return;
+
+        const nextSlotTimeText = nextSlot.querySelector('.slot-time p').textContent;
+        const nextSlotEndTime = nextSlotTimeText.split(' - ')[1];
+        const endTime = parseTimeString(nextSlotEndTime);
+        const nextSegmentEnd = new Date(endTime.getTime() + 15 * 60000);
+
+        const newSlot = document.createElement('div');
+        newSlot.className = 'time-slot upcoming';
+        newSlot.innerHTML = `
+            <div class="slot-time">
+                <p>Upcoming: ${formatTimeString(endTime)} - ${formatTimeString(nextSegmentEnd)}</p>
+            </div>
+            <div class="slot-info">
+                <p>Status: Scheduled</p>
+                <p>Price: Free</p>
+            </div>
+            <div class="slot-countdown">
+                <p>Scheduled</p>
+            </div>
+        `;
+
+        grid.appendChild(newSlot);
     }
 
     function formatTimeString(date) {
@@ -226,4 +271,14 @@ document.addEventListener('DOMContentLoaded', function() {
             text.style.letterSpacing = 'normal';
         }, 100);
     }
+
+    // Add some CSS for the upcoming slot
+    const style = document.createElement('style');
+    style.textContent = `
+        .time-slot.upcoming {
+            border-left: 4px solid #9E9E9E;
+            opacity: 0.8;
+        }
+    `;
+    document.head.appendChild(style);
 }); 

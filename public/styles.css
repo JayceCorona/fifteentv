@@ -29,21 +29,51 @@ body {
     position: relative;
     background: rgb(15, 15, 15);
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .static-text {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     color: white;
-    font-size: 48px;
+    font-size: clamp(32px, 5vw, 48px);
     font-weight: bold;
     z-index: 2;
     mix-blend-mode: screen;
-    animation: textGlitch 0.05s infinite;
+    text-align: center;
     white-space: nowrap;
-    display: flex;
+    text-shadow: 
+        2px 0 #ff0000,
+        -2px 0 #00ffff;
+    animation: textGlitch 4s infinite linear;
+}
+
+@keyframes textGlitch {
+    0%, 100% { 
+        font-family: 'Courier New', monospace;
+        transform: translate(0, 0) skew(0deg);
+    }
+    20% { 
+        font-family: 'Arial Black', sans-serif;
+        transform: translate(-2px, 1px) skew(1deg);
+        text-shadow: 3px 0 #ff0000, -3px 0 #00ffff;
+    }
+    40% { 
+        font-family: Impact, sans-serif;
+        transform: translate(2px, -1px) skew(-1deg);
+        text-shadow: 1px 0 #ff0000, -1px 0 #00ffff;
+    }
+    60% { 
+        font-family: 'Times New Roman', serif;
+        transform: translate(-1px, -1px) skew(0.5deg);
+        text-shadow: 2px 0 #ff0000, -2px 0 #00ffff;
+    }
+    80% { 
+        font-family: 'Trebuchet MS', sans-serif;
+        transform: translate(1px, 1px) skew(-0.5deg);
+        text-shadow: -2px 0 #ff0000, 2px 0 #00ffff;
+    }
 }
 
 .static-text span {
@@ -53,45 +83,43 @@ body {
 
 .static-text::before,
 .static-text::after {
-    content: attr(data-text);
+    content: 'NO SIGNAL';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     mix-blend-mode: screen;
-    white-space: nowrap;
 }
 
 .static-text::before {
     color: #ff0000;
-    animation: chromaticLeft 2s infinite linear alternate-reverse;
+    animation: glitchOffset 0.1s infinite;
+    transform: translateX(-2px);
 }
 
 .static-text::after {
-    color: #00ff00;
-    animation: chromaticRight 2s infinite linear alternate-reverse;
+    color: #00ffff;
+    animation: glitchOffset 0.1s infinite reverse;
+    transform: translateX(2px);
 }
 
-@keyframes chromaticLeft {
-    0% { transform: translate(-2px, 0); }
-    25% { transform: translate(-3px, 0.5px); }
-    50% { transform: translate(-4px, 0); }
-    75% { transform: translate(-3px, -0.5px); }
-    100% { transform: translate(-2px, 0); }
-}
-
-@keyframes chromaticRight {
-    0% { transform: translate(2px, 0); }
-    25% { transform: translate(3px, -0.5px); }
-    50% { transform: translate(4px, 0); }
-    75% { transform: translate(3px, 0.5px); }
-    100% { transform: translate(2px, 0); }
-}
-
-@keyframes letterGlitch {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-1px); }
+@keyframes glitchOffset {
+    0%, 100% { 
+        clip-path: inset(0 0 0 0);
+    }
+    20% {
+        clip-path: inset(20% 0 0 0);
+    }
+    40% {
+        clip-path: inset(40% 0 20% 0);
+    }
+    60% {
+        clip-path: inset(60% 0 40% 0);
+    }
+    80% {
+        clip-path: inset(80% 0 60% 0);
+    }
 }
 
 .video-player::before {
