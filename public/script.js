@@ -124,6 +124,14 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSlotStart.setMinutes(minutes - (minutes % 15), 0, 0);
         const currentSlotEnd = new Date(currentSlotStart.getTime() + 15 * 60000);
 
+        // Check if previous session exists and mark it as concluded
+        const previousSlot = grid.querySelector('.time-slot.current');
+        if (previousSlot) {
+            previousSlot.className = 'time-slot concluded';
+            const countdownDiv = previousSlot.querySelector('.slot-countdown');
+            countdownDiv.innerHTML = '<p class="concluded-text">Concluded</p>';
+        }
+
         const slot = document.createElement('div');
         slot.className = 'time-slot current';
         slot.innerHTML = `
