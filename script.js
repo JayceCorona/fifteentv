@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
         startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
 
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
-        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
-        const countdown = Math.floor((countdownTarget - now) / 1000);
+        const countdownTarget = new Date(startTime.getTime() - 1 * 60 * 1000); // 1 minute before start
+        const countdown = Math.floor((countdownTarget - now) / 1000); // Countdown until 1 minute before start
 
         // Create a single session slot
         const slot = {
