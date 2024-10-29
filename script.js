@@ -353,4 +353,81 @@ document.addEventListener("DOMContentLoaded", function() {
         enableDragScroll(grid);
         grid.style.cursor = 'grab';
     });
+
+    // Add this function to create individual letter spans with random styles
+    function createGlitchText() {
+        const text = document.querySelector('.static-text');
+        const letters = text.textContent.split('');
+        text.setAttribute('data-text', text.textContent); // For pseudo-elements
+        text.textContent = ''; // Clear original text
+
+        const fonts = [
+            'monospace',
+            'VT323',
+            'Press Start 2P',
+            'Courier New',
+            'Monaco',
+            'Consolas'
+        ];
+
+        letters.forEach(letter => {
+            const span = document.createElement('span');
+            span.textContent = letter;
+            text.appendChild(span);
+            
+            // Random styling function
+            function randomizeStyle() {
+                const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+                const baseSize = 48; // Base font size
+                const sizeVariation = Math.random() * 8 - 4; // ±4px variation
+
+                span.style.fontFamily = randomFont;
+                span.style.fontSize = `${baseSize + sizeVariation}px`;
+                span.style.transform = `translateY(${Math.random() * 2 - 1}px)`;
+                
+                // Occasional vertical flip
+                if (Math.random() < 0.05) {
+                    span.style.transform += ' scaleY(-1)';
+                }
+            }
+
+            // Initial randomization
+            randomizeStyle();
+
+            // Periodically update styles
+            setInterval(randomizeStyle, Math.random() * 1000 + 500);
+        });
+    }
+
+    // Call this after the DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        createGlitchText();
+    });
+
+    // Update the text content periodically with glitch variations
+    setInterval(() => {
+        const text = document.querySelector('.static-text');
+        if (Math.random() < 0.1) { // 10% chance to change text
+            const variations = [
+                'NO SIGNAL',
+                'NO S1GNAL',
+                'N0 SIGNAL',
+                'NO SI6NAL',
+                'NO_SIGNAL',
+                'NOSIGNAL',
+                '[NO SIGNAL]'
+            ];
+            const newText = variations[Math.floor(Math.random() * variations.length)];
+            text.setAttribute('data-text', newText);
+            
+            // Update individual letters
+            const spans = text.querySelectorAll('span');
+            const letters = newText.split('');
+            letters.forEach((letter, i) => {
+                if (spans[i]) {
+                    spans[i].textContent = letter;
+                }
+            });
+        }
+    }, 1000);
 });
