@@ -2,45 +2,46 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-const port = process.env.PORT || 3000;
 
-// Serve static files
-app.use(express.static('public'));
+// Serve static files from the current directory
+app.use(express.static('./'));
 
 // Store connected users
 const users = new Set();
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
-    console.log('User connected');
+    let username = null;
 
-    // Handle joining
-    socket.on('join', (username) => {
+    socket.on('join', (name) => {
+        username = name;
         users.add(username);
-        socket.username = username;
+        
+        // Broadcast to all clients that a new user joined
         io.emit('userJoined', username);
-        io.emit('userList', Array.from(users));
+        
+        // Send current users list to the new user
+        socket.emit('userList', Array.from(users));
     });
 
-    // Handle chat messages
     socket.on('chatMessage', (message) => {
-        io.emit('message', {
-            username: socket.username,
-            text: message,
-            timestamp: new Date().toISOString()
-        });
+        if (username) {
+            io.emit('message', {
+                username: username,
+                text: message,
+                timestamp: Date.now()
+            });
+        }
     });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
-        if (socket.username) {
-            users.delete(socket.username);
-            io.emit('userLeft', socket.username);
-            io.emit('userList', Array.from(users));
+        if (username) {
+            users.delete(username);
+            io.emit('userLeft', username);
         }
     });
 });
 
-http.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 }); 
