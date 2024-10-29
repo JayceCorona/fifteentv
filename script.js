@@ -70,18 +70,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Function to display the next available session
+    function calculateOptimalSlots() {
+        const section = document.querySelector('.schedule-section');
+        const sectionWidth = section.offsetWidth;
+        const slotWidth = 200; // Base slot width
+        const gap = 15; // Gap between slots
+        return Math.floor((sectionWidth + gap) / (slotWidth + gap));
+    }
+
     function displayNextSession() {
-        const now = new Date();
-        const minutes = now.getMinutes();
-        const remainder = 15 - (minutes % 15);
-        
-        // Get the latest slot's end time if it exists
+        const maxVisibleSlots = calculateOptimalSlots();
         const slots = document.querySelectorAll('.time-slot');
+        
+        // Remove excess slots
+        while (slots.length >= maxVisibleSlots) {
+            slots[0].remove();
+        }
+
+        const now = new Date();
         let startTime;
         
         if (slots.length > 0) {
             // Parse the last slot's end time and add 15 minutes
-            const lastSlotTimeText = slots[slots.length - 1].querySelector('.slot-time').textContent;
+            const lastSlotTimeText = slots[slots.length - 1].querySelector('.slot-time p').textContent;
             const endTimeStr = lastSlotTimeText.split(' - ')[1];
             const [hours, minutes] = endTimeStr.split(':').map(num => parseInt(num));
             
@@ -92,6 +103,8 @@ document.addEventListener("DOMContentLoaded", function() {
             startTime.setMilliseconds(0);
         } else {
             // If no slots exist, use next 15-minute interval
+            const minutes = now.getMinutes();
+            const remainder = 15 - (minutes % 15);
             startTime = new Date(now);
             startTime.setMinutes(minutes + remainder, 0, 0);
         }
@@ -114,27 +127,31 @@ document.addEventListener("DOMContentLoaded", function() {
 
         block.innerHTML = `
             <div class="slot-time">
-                <p>Time: ${slot.startTime} - ${slot.endTime}</p>
+                <p title="Time: ${slot.startTime} - ${slot.endTime}">
+                    Time: ${slot.startTime} - ${slot.endTime}
+                </p>
             </div>
             <div class="slot-info">
-                <p>Price: ${slot.price}</p>
-                <p>Status: <span>${slot.status}</span></p>
+                <p title="Price: ${slot.price}">Price: ${slot.price}</p>
+                <p title="Status: ${slot.status}">Status: <span>${slot.status}</span></p>
             </div>
             <div class="slot-countdown">
-                <p>Countdown: <span class="countdown">
-                    ${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}
-                </span></p>
+                <p title="Countdown: ${slot.countdown > 0 ? formatCountdown(slot.countdown) : 'Auction Ended'}">
+                    Countdown: <span class="countdown">
+                        ${slot.countdown > 0 ? formatCountdown(slot.countdown) : "Auction Ended"}
+                    </span>
+                </p>
             </div>
         `;
 
+        const grid = document.getElementById('schedule-grid');
         grid.appendChild(block);
 
-        // Calculate scroll position
+        // Smooth scroll to latest slot
         const gridWidth = grid.scrollWidth;
         const containerWidth = grid.parentElement.offsetWidth;
         const maxScroll = gridWidth - containerWidth;
         
-        // Smooth scroll to show the newest slot
         grid.scrollTo({
             left: maxScroll,
             behavior: 'smooth'
@@ -142,12 +159,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (slot.status === "Available") {
             startCountdown(block, slot.countdown);
-        }
-
-        // Remove old slots if we have too many
-        const allSlots = document.querySelectorAll('.time-slot');
-        if (allSlots.length > 10) { // Keep last 10 slots
-            allSlots[0].remove();
         }
     }
 
@@ -430,4 +441,30 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }, 1000);
+
+    // Add resize handler to adjust slots when window size changes
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            const slots = document.querySelectorAll('.time-slot');
+            const maxSlots = calculateOptimalSlots();
+            
+            // Remove excess slots if window gets smaller
+            while (slots.length > maxSlots) {
+                slots[0].remove();
+            }
+        }, 250);
+    });
+
+    // Initialize with correct number of slots
+    document.addEventListener('DOMContentLoaded', () => {
+        // Your existing initialization code...
+        
+        // Initial slot calculation
+        const maxSlots = calculateOptimalSlots();
+        for (let i = 0; i < maxSlots - 1; i++) {
+            displayNextSession();
+        }
+    });
 });
