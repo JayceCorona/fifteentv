@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Video controls and other UI functionality
     setupVideoControls();
     setupScheduleGrid();
+    displayNextSession();
     enableDragScroll(document.getElementById('schedule-grid'));
 
     // Other functionality
@@ -83,7 +84,65 @@ function setupScheduleGrid() {
     displayNextSession();
     // Additional grid-related functionality can be placed here
 }
+// Function to calculate and display the next available session
+function displayNextSession() {
+    console.log("Display next session called");
 
+    const grid = document.getElementById('schedule-grid');
+    if (!grid) {
+        console.error("Error: #schedule-grid element not found.");
+        return;
+    }
+
+    const now = new Date();
+    let startTime;
+
+    // Calculate start time for the next session based on existing slots
+    const slots = grid.querySelectorAll('.time-slot');
+    if (slots.length > 0) {
+        const lastSlotTimeText = slots[slots.length - 1].querySelector('.slot-time p').textContent;
+        const endTimeStr = lastSlotTimeText.split(' - ')[1];
+        const [hours, minutes] = endTimeStr.split(':').map(num => parseInt(num));
+
+        startTime = new Date(now);
+        startTime.setHours(hours);
+        startTime.setMinutes(minutes);
+        startTime.setSeconds(0);
+    } else {
+        // Set to the next 15-minute interval if there are no existing slots
+        const minutes = now.getMinutes();
+        const remainder = 15 - (minutes % 15);
+        startTime = new Date(now);
+        startTime.setMinutes(minutes + remainder, 0, 0);
+    }
+
+    const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+
+    const slot = {
+        startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        price: "Free",
+        status: "Available"
+    };
+
+    // Create slot element
+    const block = document.createElement("div");
+    block.className = "time-slot";
+    block.dataset.status = slot.status;
+
+    block.innerHTML = `
+        <div class="slot-time">
+            <p>Time: ${slot.startTime} - ${slot.endTime}</p>
+        </div>
+        <div class="slot-info">
+            <p>Price: ${slot.price}</p>
+            <p>Status: <span>${slot.status}</span></p>
+        </div>
+    `;
+
+    grid.appendChild(block); // Add new slot to the grid
+    console.log("New time slot added:", slot);
+}
 // Play/Pause toggle
 function togglePlay(video, playPauseBtn) {
     if (video.paused) {
