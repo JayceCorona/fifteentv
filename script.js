@@ -1,21 +1,30 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const grid = document.getElementById("schedule-grid");
+    console.log("Script loaded"); // Debugging: Confirm script execution
 
-    // Calculate the next 15-minute interval for the starting time
+    const grid = document.getElementById("schedule-grid");
+    if (!grid) {
+        console.error("Grid element not found");
+        return;
+    }
+
+    console.log("Grid element found");
+
+    // Calculate the next 15-minute interval
     const now = new Date();
     const startTime = new Date(now);
     const minutes = startTime.getMinutes();
     const remainder = 15 - (minutes % 15);
-    startTime.setMinutes(minutes + remainder, 0, 0); // Set to nearest future 15-minute interval
+    startTime.setMinutes(minutes + remainder, 0, 0);
+
+    console.log("Calculated start time:", startTime);
 
     const slots = [];
 
-    // Generate 15-minute blocks from the calculated start time until 5 PM
-    while (startTime.getHours() < 17) { // Until 5 PM
-        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
-        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
+    // Generate 15-minute blocks until 5 PM
+    while (startTime.getHours() < 17) {
+        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+        const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000);
 
-        // Determine slot status and calculate countdown from 15 minutes before start
         const status = now > countdownTarget ? "taken" : "free";
         const countdown = status === "free" ? Math.floor((countdownTarget - now) / 1000) : 0;
 
@@ -24,13 +33,17 @@ document.addEventListener("DOMContentLoaded", function() {
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: status,
             countdown: countdown,
-            price: "Free" // Default price is "Free" until an auction price is set
+            price: "Free"
         });
 
-        startTime.setTime(endTime.getTime()); // Move to next 15-minute slot
+        console.log("Slot created:", slots[slots.length - 1]);
+
+        startTime.setTime(endTime.getTime());
     }
 
-    // Render each slot in the grid
+    console.log("Total slots generated:", slots.length);
+
+    // Render slots in the grid
     slots.forEach(slot => {
         const block = document.createElement("div");
         block.className = "time-slot";
@@ -46,12 +59,14 @@ document.addEventListener("DOMContentLoaded", function() {
         grid.appendChild(block);
     });
 
-    // Start countdown timers for free slots
+    console.log("Slots rendered to the DOM");
+
+    // Start countdown for free slots
     function startCountdown() {
         const slots = document.querySelectorAll(".time-slot[data-status='free']");
         slots.forEach(slot => {
             const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) * 60 || slot.countdown;
+            let timeLeft = parseInt(slot.countdown);
 
             const timer = setInterval(() => {
                 if (timeLeft <= 0) {
@@ -59,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     countdownElem.textContent = "Auction Ended";
                     slot.dataset.status = "taken";
                     slot.querySelector("span").textContent = "Taken";
-                    slot.style.backgroundColor = "#ffd7d7"; // Update color to show it's taken
+                    slot.style.backgroundColor = "#ffd7d7";
                 } else {
                     timeLeft--;
                     countdownElem.textContent = formatCountdown(timeLeft);
@@ -70,11 +85,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     startCountdown();
 
-    // Helper function to format seconds as MM:SS
     function formatCountdown(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
 });
-
