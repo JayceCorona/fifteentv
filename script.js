@@ -71,10 +71,11 @@ document.addEventListener("DOMContentLoaded", function() {
         const slots = document.querySelectorAll(".time-slot[data-status='free']");
         slots.forEach(slot => {
             const countdownElem = slot.querySelector(".countdown");
-            let timeLeft = parseInt(slot.countdown);
+
+            let timeLeft = parseInt(countdownElem.textContent.split(":").join("")) || parseInt(slot.dataset.countdown, 10);
 
             const timer = setInterval(() => {
-                if (timeLeft <= 0) {
+                if (isNaN(timeLeft) || timeLeft <= 0) {
                     clearInterval(timer);
                     countdownElem.textContent = "Auction Ended";
                     slot.dataset.status = "taken";
