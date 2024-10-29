@@ -237,8 +237,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         const seconds = now.getSeconds();
         
         if (minutes % 15 === 0 && seconds === 0) {
-            refreshScheduleGrid();
+            transitionSlots();
         }
+    }
+
+    function transitionSlots() {
+        const grid = document.getElementById('schedule-grid');
+        if (!grid) return;
+
+        // Find current and next slots
+        const currentSlot = grid.querySelector('.time-slot.current');
+        const nextSlot = grid.querySelector('.time-slot.next');
+
+        if (currentSlot) {
+            // Update current slot to concluded
+            currentSlot.className = 'time-slot concluded';
+            const liveIndicator = currentSlot.querySelector('.slot-countdown');
+            if (liveIndicator) {
+                liveIndicator.innerHTML = '<p class="concluded-text">Concluded</p>';
+            }
+            currentSlot.style.opacity = '0.6';
+        }
+
+        if (nextSlot) {
+            // Update next slot to current/live
+            nextSlot.className = 'time-slot current';
+            const countdown = nextSlot.querySelector('.slot-countdown');
+            if (countdown) {
+                countdown.innerHTML = `
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Add a new next slot
+        displayNextSession();
     }
 
     function refreshScheduleGrid() {
@@ -388,13 +424,28 @@ document.addEventListener('DOMContentLoaded', async function() {
             text.style.letterSpacing = 'normal';
         }, 100);
     }
-
     // Add some CSS for the upcoming slot
-    const style = document.createElement('style');
-    style.textContent = `
+    const upcomingStyle = document.createElement('style');
+    upcomingStyle.textContent = `
         .time-slot.upcoming {
             border-left: 4px solid #9E9E9E;
             opacity: 0.8;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Update the CSS for concluded slots
+    const style = document.createElement('style');
+    style.textContent = `
+        .time-slot.concluded {
+            border-left: 4px solid #9E9E9E;
+            opacity: 0.6;
+            background: #f5f5f5;
+        }
+
+        .concluded-text {
+            color: #666;
+            font-style: italic;
         }
     `;
     document.head.appendChild(style);
