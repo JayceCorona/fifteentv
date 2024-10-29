@@ -57,6 +57,12 @@ async function initializeStreamChat() {
             appendMessage(event.message);
         });
 
+        // Load previous messages
+        const state = await channel.watch();
+        state.messages.forEach(message => {
+            appendMessage(message);
+        });
+
         // Set up message sending
         setupMessageHandlers();
 
@@ -83,16 +89,32 @@ function setupMessageHandlers() {
     }
 
     async function sendMessage() {
-        console.log('Send button clicked');
+        const messageInput = document.getElementById('messageInput');
         const text = messageInput.value.trim();
+        
         if (text && channel) {
             try {
-                console.log('Sending message:', text);
-                await channel.sendMessage({
+                console.log('Attempting to send message:', text);
+                
+                // Send the message
+                const response = await channel.sendMessage({
                     text: text,
                 });
-                console.log('Message sent successfully');
+                
+                console.log('Message sent response:', response);
+                
+                // Clear input after successful send
                 messageInput.value = '';
+                
+                // Manually append the message (in case the event listener misses it)
+                appendMessage({
+                    text: text,
+                    user: {
+                        name: `User ${chatClient.user.id.slice(-4)}`
+                    },
+                    created_at: new Date()
+                });
+                
             } catch (error) {
                 console.error('Error sending message:', error);
             }
@@ -123,11 +145,20 @@ function appendMessage(message) {
         return;
     }
 
+    console.log('Appending message:', message); // Debug log
+
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
+    
+    // Safely get user name
+    const username = message.user?.name || 'Unknown User';
+    
+    // Format timestamp
+    const timestamp = new Date(message.created_at).toLocaleTimeString();
+    
     messageDiv.innerHTML = `
-        <span class="username">${message.user.name}</span>
-        <span class="timestamp">${new Date(message.created_at).toLocaleTimeString()}</span>
+        <span class="username">${username}</span>
+        <span class="timestamp">${timestamp}</span>
         <div class="text">${message.text}</div>
     `;
     chatMessages.appendChild(messageDiv);
