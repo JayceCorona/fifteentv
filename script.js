@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize schedule grid and navigation
     setupScheduleGrid();
- 
+  
     // Initialize glitch effect
     createGlitchText();
     setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
