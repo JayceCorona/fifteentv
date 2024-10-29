@@ -49,6 +49,7 @@ body {
 .static-text span {
     display: inline-block;
     animation: letterGlitch 0.1s infinite;
+    font-size: 48px;
 }
 
 .static-text::before,
@@ -90,8 +91,22 @@ body {
 }
 
 @keyframes letterGlitch {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-1px); }
+    0%, 100% { 
+        transform: translateY(0);
+        font-size: 48px;
+    }
+    25% { 
+        transform: translateY(-1px);
+        font-size: 46px;
+    }
+    50% { 
+        transform: translateY(-1px);
+        font-size: 50px;
+    }
+    75% { 
+        transform: translateY(1px);
+        font-size: 44px;
+    }
 }
 
 .video-player::before {
@@ -465,3 +480,7 @@ video::-webkit-media-controls {
 .schedule-section::after {
     z-index: 2;
 }
+
+document.querySelectorAll('.static-text span').forEach(span => {
+    span.style.animationDelay = `${Math.random() * 0.5}s`;
+});
