@@ -274,21 +274,22 @@ video::-webkit-media-controls {
 
 .schedule-section {
     height: 150px;
-    min-height: fit-content;
-    overflow-y: hidden;
-    padding: 20px;
-    background: #f5f5f5;
     position: relative;
-    box-sizing: border-box;
+    background: #f5f5f5;
     display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
 #schedule-grid {
     display: flex;
     gap: 20px;
-    height: min-content;
-    padding: 0 20px;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+    position: absolute;
 }
 
 .chat-section {
@@ -376,6 +377,7 @@ video::-webkit-media-controls {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+    margin: 0;
 }
 
 .slot-time {
