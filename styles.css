@@ -343,7 +343,7 @@ video::-webkit-media-controls {
 
 .time-slot {
     min-width: min(200px, calc(33% - 15px));
-    height: 80%;
+    height: 80%;  /* Make cards 80% of section height */
     flex-shrink: 0;
     background: white;
     padding: 20px;
@@ -393,13 +393,13 @@ video::-webkit-media-controls {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: clamp(12px, 1.2vw, 14px);
+    font-size: clamp(12px, 1.2vw, 14px);  /* Responsive font size */
 }
 
-.countdown, 
-.slot-info span {
+.countdown {
     font-weight: bold;
     color: #333;
+    font-size: clamp(16px, 1.8vw, 24px);  /* Larger responsive font for countdown */
 }
 
 .schedule-section::before,
