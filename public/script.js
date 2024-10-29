@@ -6,6 +6,12 @@ async function initializeStreamChat() {
     try {
         console.log('Initializing Stream Chat...');
         
+        // Check if StreamChat is loaded
+        if (typeof StreamChat === 'undefined') {
+            console.log('Using window.StreamChat instead');
+            StreamChat = window.StreamChat;
+        }
+        
         const userId = 'user-' + Math.random().toString(36).substring(7);
         console.log('Generated user ID:', userId);
         
@@ -24,7 +30,8 @@ async function initializeStreamChat() {
         const { token } = await response.json();
         console.log('Token received');
 
-        chatClient = StreamChat.getInstance('g9m53zqntv69');
+        // Create new Stream Chat instance
+        chatClient = new StreamChat('g9m53zqntv69');
         console.log('Stream client created');
 
         await chatClient.connectUser(
@@ -53,6 +60,7 @@ async function initializeStreamChat() {
         return true;
     } catch (error) {
         console.error('Error in chat initialization:', error);
+        console.error('Error details:', error.stack);
         return false;
     }
 }
