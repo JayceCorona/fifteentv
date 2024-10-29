@@ -1,5 +1,115 @@
+let chatClient;
+let channel;
+
+async function initializeStreamChat() {
+    try {
+        console.log('Initializing Stream Chat...');
+        
+        const userId = 'user-' + Math.random().toString(36).substring(7);
+        console.log('Generated user ID:', userId);
+        
+        const response = await fetch('/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId }),
+        });
+        
+        const { token } = await response.json();
+        console.log('Token received');
+
+        chatClient = StreamChat.getInstance('g9m53zqntv69');
+        await chatClient.connectUser(
+            {
+                id: userId,
+                name: `User ${userId.slice(-4)}`,
+            },
+            token
+        );
+
+        channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
+            name: 'Fifteen.tv Chat',
+        });
+        
+        await channel.watch();
+        
+        // Set up message handlers after channel is ready
+        setupMessageHandlers();
+        return true;
+    } catch (error) {
+        console.error('Error in chat initialization:', error);
+        return false;
+    }
+}
+
+function setupMessageHandlers() {
+    const sendButton = document.getElementById('sendButton');
+    const messageInput = document.getElementById('messageInput');
+
+    if (sendButton && messageInput) {
+        // Send button click handler
+        sendButton.onclick = async () => {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            try {
+                await channel.sendMessage({
+                    text: text
+                });
+                
+                // Clear input after successful send
+                messageInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+        // Enter key handler
+        messageInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        };
+
+        // Listen for new messages
+        channel.on('message.new', event => {
+            appendMessage(event.message);
+        });
+    }
+}
+
+function appendMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    
+    // Add incoming/outgoing class based on message sender
+    if (message.user.id === chatClient.user.id) {
+        messageDiv.classList.add('outgoing');
+    } else {
+        messageDiv.classList.add('incoming');
+    }
+    
+    const timestamp = new Date(message.created_at).toLocaleTimeString();
+    
+    messageDiv.innerHTML = `
+        <div class="username">${message.user.name}</div>
+        <div class="text">${message.text}</div>
+        <div class="timestamp">${timestamp}</div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("Script loaded");
+
+    // Initialize Stream Chat
+    await initializeStreamChat();
 
     // Initialize schedule grid and navigation
     setupScheduleGrid();
