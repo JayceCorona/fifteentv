@@ -24,32 +24,113 @@ document.addEventListener('DOMContentLoaded', function() {
     const durationSpan = document.getElementById('duration');
 
     // Chat functionality
-    function sendMessage() {
-        const message = messageInput.value.trim();
-        if (message) {
-            socket.emit('chat message', message);
-            messageInput.value = '';
+    let chatClient;
+    let channel;
+
+    async function initializeStreamChat() {
+        try {
+            console.log('Initializing Stream Chat...');
+            
+            const userId = 'user-' + Math.random().toString(36).substring(7);
+            console.log('Generated user ID:', userId);
+            
+            const response = await fetch('/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const { token } = await response.json();
+            console.log('Token received');
+
+            chatClient = StreamChat.getInstance('g9m53zqntv69');
+            console.log('Stream client created');
+
+            await chatClient.connectUser(
+                {
+                    id: userId,
+                    name: `User ${userId.slice(-4)}`,
+                },
+                token
+            );
+            console.log('User connected');
+
+            channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
+                name: 'Fifteen.tv Chat',
+            });
+            
+            await channel.watch();
+            console.log('Channel watching');
+
+            // Set up message listener
+            channel.on('message.new', event => {
+                console.log('New message received:', event);
+                appendMessage(event.message);
+            });
+
+            setupMessageHandlers();
+            return true;
+        } catch (error) {
+            console.error('Error in chat initialization:', error);
+            return false;
         }
     }
 
-    sendButton.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
+    function setupMessageHandlers() {
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
 
-    socket.on('chat message', (msg) => {
+        if (sendButton && messageInput) {
+            console.log('Setting up chat handlers');
+            
+            async function sendMessage() {
+                const text = messageInput.value.trim();
+                if (text && channel) {
+                    try {
+                        console.log('Sending message:', text);
+                        await channel.sendMessage({
+                            text: text,
+                        });
+                        messageInput.value = '';
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                    }
+                }
+            }
+
+            sendButton.onclick = sendMessage;
+            messageInput.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            };
+        }
+    }
+
+    function appendMessage(message) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message';
+        
+        const timestamp = new Date(message.created_at).toLocaleTimeString();
+        
         messageDiv.innerHTML = `
-            <span class="username">User ${msg.userId.slice(0, 4)}</span>
-            <span class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-            <div class="text">${msg.text}</div>
+            <span class="username">${message.user.name}</span>
+            <span class="timestamp">${timestamp}</span>
+            <div class="text">${message.text}</div>
         `;
+        
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
+    }
 
     // Video player functionality
     playPauseBtn.addEventListener('click', () => {
