@@ -94,182 +94,12 @@ body {
 
 .static-text::before {
     color: #ff0000;
-    animation: glitchOffset 0.1s infinite;
-    transform: translateX(-2px);
+    transform: translate(2px, 0);
 }
 
 .static-text::after {
     color: #00ffff;
-    animation: glitchOffset 0.1s infinite reverse;
-    transform: translateX(2px);
-}
-
-@keyframes glitchOffset {
-    0%, 100% { 
-        clip-path: inset(0 0 0 0);
-    }
-    20% {
-        clip-path: inset(20% 0 0 0);
-    }
-    40% {
-        clip-path: inset(40% 0 20% 0);
-    }
-    60% {
-        clip-path: inset(60% 0 40% 0);
-    }
-    80% {
-        clip-path: inset(80% 0 60% 0);
-    }
-}
-
-.video-player::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.8) 70%),
-        repeating-radial-gradient(#000 0 1px, transparent 1px 2px) 0 0/3px 3px;
-    animation: static 0.05s steps(1) infinite;
-    pointer-events: none;
-    opacity: 0.5;
-}
-
-.video-player::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        transparent 0px,
-        rgba(255, 255, 255, 0.1) 1px,
-        transparent 2px
-    );
-    background-size: 100% 3px;
-    animation: scanlines 8s linear infinite;
-    pointer-events: none;
-}
-
-@keyframes static {
-    0% { 
-        transform: translate(0, 0);
-        filter: brightness(1);
-    }
-    20% { 
-        transform: translate(-1px, 1px);
-        filter: brightness(1.1);
-    }
-    40% { 
-        transform: translate(1px, -1px);
-        filter: brightness(0.95);
-    }
-    60% { 
-        transform: translate(-1px, -1px);
-        filter: brightness(1.05);
-    }
-    80% { 
-        transform: translate(1px, 1px);
-        filter: brightness(0.98);
-    }
-    100% { 
-        transform: translate(0, 0);
-        filter: brightness(1);
-    }
-}
-
-@keyframes scanlines {
-    from {
-        background-position: 0 0;
-    }
-    to {
-        background-position: 0 100%;
-    }
-}
-
-@keyframes glitch {
-    0% { 
-        transform: translate(-50%, -50%) skew(0deg);
-        text-shadow: -2px 0 #ff0000, 2px 2px #0000ff;
-    }
-    20% { 
-        transform: translate(-50%, -50%) skew(0.5deg);
-        text-shadow: 2px -1px #ff0000, -2px 1px #0000ff;
-    }
-    40% { 
-        transform: translate(-50%, -50%) skew(-0.5deg);
-        text-shadow: -1px 1px #ff0000, 1px -1px #0000ff;
-    }
-    60% { 
-        transform: translate(-50%, -50%) skew(0.2deg);
-        text-shadow: 1px -2px #ff0000, -1px 2px #0000ff;
-    }
-    80% { 
-        transform: translate(-50%, -50%) skew(-0.2deg);
-        text-shadow: -2px 1px #ff0000, 2px -1px #0000ff;
-    }
-}
-
-video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-video::-webkit-media-controls {
-    display: none !important;
-}
-
-/* Hide the static effect when video is playing */
-.video-player.playing::before,
-.video-player.playing::after,
-.video-player.playing .static-text {
-    display: none;
-}
-
-.video-controls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.control-btn {
-    background: transparent;
-    border: 1px solid #fff;
-    color: #fff;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-}
-
-#volumeSlider {
-    width: 100px;
-}
-
-.time-display {
-    color: #fff;
-}
-
-.progress-bar {
-    flex-grow: 1;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-}
-
-#progress {
-    height: 100%;
-    background: #fff;
-    width: 0%;
+    transform: translate(-2px, 0);
 }
 
 .schedule-section {
@@ -292,6 +122,25 @@ video::-webkit-media-controls {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.time {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.streamer {
+    font-size: 1em;
+    margin: 5px 0;
+    color: #666;
+}
+
+.title {
+    font-size: 0.9em;
+    color: #888;
+    margin: 5px 0;
 }
 
 .chat-section {
@@ -337,21 +186,11 @@ video::-webkit-media-controls {
     word-break: break-word;
 }
 
-.system-message {
-    text-align: center;
-    color: #6c757d;
-    font-style: italic;
-    font-size: 0.9em;
-    margin: 5px 0;
-}
-
 .chat-input {
     padding: 15px;
     border-top: 1px solid #ddd;
     display: flex;
     gap: 10px;
-    background: white;
-    z-index: 1;
 }
 
 .chat-input input {
@@ -374,96 +213,6 @@ video::-webkit-media-controls {
     background: #0056b3;
 }
 
-.time-slot {
-    min-width: 250px;
-    background: white;
-    padding: 12px 12px 8px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    transition: opacity 0.3s ease, background-color 0.3s ease;
-}
-
-.slot-time {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 3px;
-    margin-bottom: 3px;
-}
-
-.slot-info {
-    padding: 3px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.slot-countdown {
-    padding-top: 3px;
-    text-align: center;
-    margin-bottom: 0;
-}
-
-.time-slot p {
-    margin: 2px 0;
-    line-height: 1.1;
-    font-size: 14px;
-    color: #333;
-}
-
-.live-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 0;
-    height: 20px;
-}
-
-.countdown {
-    font-weight: bold;
-    color: #333;
-    font-size: 16px;
-    margin: 0;
-    height: 20px;
-    line-height: 20px;
-}
-
-/* Current and next session specific styles */
-.time-slot.current {
-    border-left: 4px solid #4CAF50;
-}
-
-.time-slot.next {
-    border-left: 4px solid #2196F3;
-}
-
-.time-slot.upcoming {
-    border-left: 4px solid #9E9E9E;
-    opacity: 0.8;
-}
-
-.schedule-section::before,
-.schedule-section::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 20px;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.schedule-section::before {
-    left: 0;
-    background: linear-gradient(90deg, #f5f5f5 0%, transparent 100%);
-}
-
-.schedule-section::after {
-    right: 0;
-    background: linear-gradient(-90deg, #f5f5f5 0%, transparent 100%);
-}
-
-/* Navigation buttons */
 .schedule-nav {
     position: absolute;
     top: 50%;
