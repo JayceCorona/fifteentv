@@ -1,33 +1,40 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = process.env.PORT || 3000;
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve static files (e.g., HTML, CSS, JS) in the root directory
-app.use(express.static(__dirname));
+// Serve the main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'schedule.html'));
+});
 
-// Handle new WebSocket connections
+// Handle WebSocket connections
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('User connected:', socket.id);
 
-    // Listen for chat messages from this client
-    socket.on('chat message', (msg) => {
-        // Broadcast message to all clients
-        io.emit('chat message', msg);
+    // Handle chat messages
+    socket.on('chat message', (message) => {
+        io.emit('chat message', {
+            userId: socket.id,
+            text: message,
+            timestamp: new Date().toISOString()
+        });
     });
 
-    // Handle client disconnecting
+    // Handle disconnection
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        console.log('User disconnected:', socket.id);
     });
 });
 
-// Start the server
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
