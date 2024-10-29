@@ -19,7 +19,7 @@ body {
 }
 
 .video-section {
-    height: 75vh;
+    flex: 0 0 85%;
     position: relative;
 }
 
@@ -245,7 +245,7 @@ video::-webkit-media-controls {
 }
 
 .schedule-section {
-    height: 25vh;
+    flex: 0 0 15%;
     overflow-y: hidden;
     padding: 20px;
     background: #f5f5f5;
