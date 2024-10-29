@@ -10,8 +10,8 @@ const io = socketIo(server);
 
 // Initialize Stream Chat with your API credentials
 const streamChat = new StreamChat(
-    process.env.STREAM_API_KEY,
-    process.env.STREAM_API_SECRET
+    'g9m53zqntv69',  // Your API key
+    process.env.STREAM_API_SECRET  // Your API secret from Heroku config
 );
 
 // Serve static files

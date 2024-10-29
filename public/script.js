@@ -3,10 +3,14 @@ let channel;
 
 async function initializeStreamChat() {
     try {
+        console.log('Initializing Stream Chat...');
+        
         // Generate a random user ID if needed
         const userId = 'user-' + Math.random().toString(36).substring(7);
+        console.log('Generated user ID:', userId);
         
         // Get token from your server
+        console.log('Fetching token...');
         const response = await fetch('/token', {
             method: 'POST',
             headers: {
@@ -14,12 +18,20 @@ async function initializeStreamChat() {
             },
             body: JSON.stringify({ userId }),
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const { token } = await response.json();
+        console.log('Token received');
 
         // Initialize Stream Chat client
+        console.log('Initializing client...');
         chatClient = StreamChat.getInstance('g9m53zqntv69');
         
         // Connect user
+        console.log('Connecting user...');
         await chatClient.connectUser(
             {
                 id: userId,
@@ -27,17 +39,21 @@ async function initializeStreamChat() {
             },
             token
         );
+        console.log('User connected');
 
         // Create or join a channel
+        console.log('Creating/joining channel...');
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat',
         });
         
         // Initialize the channel
         await channel.watch();
+        console.log('Channel initialized');
 
         // Set up message listener
         channel.on('message.new', event => {
+            console.log('New message received:', event.message);
             appendMessage(event.message);
         });
 
@@ -54,18 +70,28 @@ function setupMessageHandlers() {
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
 
+    console.log('Setting up message handlers:', { messageInput, sendButton });
+
     if (!messageInput || !sendButton) {
         console.error('Chat input elements not found');
         return;
     }
 
+    if (!channel) {
+        console.error('Channel not initialized');
+        return;
+    }
+
     async function sendMessage() {
+        console.log('Send button clicked');
         const text = messageInput.value.trim();
         if (text && channel) {
             try {
+                console.log('Sending message:', text);
                 await channel.sendMessage({
                     text: text,
                 });
+                console.log('Message sent successfully');
                 messageInput.value = '';
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -73,10 +99,14 @@ function setupMessageHandlers() {
         }
     }
 
-    // Add click event listener
-    sendButton.addEventListener('click', sendMessage);
+    // Remove old event listeners if any
+    sendButton.removeEventListener('click', sendMessage);
+    messageInput.removeEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
 
-    // Add enter key event listener
+    // Add new event listeners
+    sendButton.addEventListener('click', sendMessage);
     messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             sendMessage();
