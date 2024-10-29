@@ -68,3 +68,35 @@ button:hover {
     width: 100%; /* Ensures the break spans the full grid width */
     height: 1px; /* Optional: can use padding instead for flexible spacing */
 }
+
+.content-wrapper {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.video-section {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+
+.schedule-section {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+}
+
+#schedule-grid {
+    max-width: 400px;
+}
+
+.time-slot {
+    background-color: #f5f5f5;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
