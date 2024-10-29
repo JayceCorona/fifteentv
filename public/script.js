@@ -6,13 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize glitch effect
     createGlitchText();
-    setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
-
-    // Socket.io setup
-    const socket = io();
-    const chatMessages = document.getElementById('chatMessages');
-    const messageInput = document.getElementById('messageInput');
-    const sendButton = document.getElementById('sendButton');
+    setInterval(intensifyGlitch, 100);
 
     // Video player elements
     const video = document.getElementById('mainPlayer');
@@ -23,170 +17,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentTimeSpan = document.getElementById('currentTime');
     const durationSpan = document.getElementById('duration');
 
-    // Chat functionality
-    let chatClient;
-    let channel;
-
-    async function initializeStreamChat() {
-        try {
-            console.log('Initializing Stream Chat...');
-            
-            const userId = 'user-' + Math.random().toString(36).substring(7);
-            console.log('Generated user ID:', userId);
-            
-            const response = await fetch('/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId }),
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const { token } = await response.json();
-            console.log('Token received');
-
-            chatClient = StreamChat.getInstance('g9m53zqntv69');
-            console.log('Stream client created');
-
-            await chatClient.connectUser(
-                {
-                    id: userId,
-                    name: `User ${userId.slice(-4)}`,
-                },
-                token
-            );
-            console.log('User connected');
-
-            channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
-                name: 'Fifteen.tv Chat',
-            });
-            
-            await channel.watch();
-            console.log('Channel watching');
-
-            // Set up message listener
-            channel.on('message.new', event => {
-                console.log('New message received:', event);
-                appendMessage(event.message);
-            });
-
-            setupMessageHandlers();
-            return true;
-        } catch (error) {
-            console.error('Error in chat initialization:', error);
-            return false;
-        }
-    }
-
-    function setupMessageHandlers() {
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-
-        if (sendButton && messageInput) {
-            console.log('Setting up chat handlers');
-            
-            async function sendMessage() {
-                const text = messageInput.value.trim();
-                console.log('Attempting to send message:', text);
-                
-                if (!text) {
-                    console.log('No message to send');
-                    return;
-                }
-                
-                if (!channel) {
-                    console.error('Chat channel not initialized');
-                    return;
-                }
-
-                try {
-                    // Clear input immediately for better UX
-                    const messageText = text;
-                    messageInput.value = '';
-                    
-                    console.log('Sending message to channel...');
-                    const response = await channel.sendMessage({
-                        text: messageText
-                    });
-                    
-                    console.log('Message sent successfully:', response);
-                    
-                    // Manually append message if needed
-                    appendMessage({
-                        text: messageText,
-                        user: {
-                            name: `User ${chatClient.user.id.slice(-4)}`
-                        },
-                        created_at: new Date()
-                    });
-                    
-                } catch (error) {
-                    console.error('Failed to send message:', error);
-                    // Optionally show error to user
-                    messageInput.value = text; // Restore message if failed
-                }
-            }
-
-            // Remove any existing event listeners
-            sendButton.replaceWith(sendButton.cloneNode(true));
-            messageInput.replaceWith(messageInput.cloneNode(true));
-            
-            // Get fresh references after replacing elements
-            const newSendButton = document.getElementById('sendButton');
-            const newMessageInput = document.getElementById('messageInput');
-            
-            // Add new event listeners
-            newSendButton.onclick = sendMessage;
-            newMessageInput.onkeypress = function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            };
-        }
-    }
-
-    function appendMessage(message) {
-        const chatMessages = document.getElementById('chatMessages');
-        if (!chatMessages) return;
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        
-        const timestamp = new Date(message.created_at).toLocaleTimeString();
-        
-        messageDiv.innerHTML = `
-            <span class="username">${message.user.name}</span>
-            <span class="timestamp">${timestamp}</span>
-            <div class="text">${message.text}</div>
-        `;
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+    // Initialize Stream Chat
+    initializeStreamChat().then(result => {
+        console.log('Chat initialization result:', result);
+    });
 
     // Video player functionality
-    playPauseBtn.addEventListener('click', () => {
-        if (video.paused) {
-            video.play();
-            playPauseBtn.textContent = 'Pause';
-        } else {
-            video.pause();
-            playPauseBtn.textContent = 'Play';
-        }
-    });
+    if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+                playPauseBtn.textContent = 'Pause';
+            } else {
+                video.pause();
+                playPauseBtn.textContent = 'Play';
+            }
+        });
+    }
 
-    muteBtn.addEventListener('click', () => {
-        video.muted = !video.muted;
-        muteBtn.textContent = video.muted ? 'Unmute' : 'Mute';
-    });
+    if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.textContent = video.muted ? 'Unmute' : 'Mute';
+        });
+    }
 
-    volumeSlider.addEventListener('input', (e) => {
-        video.volume = e.target.value;
-    });
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            video.volume = e.target.value;
+        });
+    }
 
     video.addEventListener('timeupdate', () => {
         const percent = (video.currentTime / video.duration) * 100;
