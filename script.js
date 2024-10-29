@@ -71,29 +71,32 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Function to display the next available session
     function displayNextSession() {
-        grid.innerHTML = ""; // Clear the grid to show only one session
+        // Keep existing slots and add new one
+        const slots = document.querySelectorAll('.time-slot');
+        if (slots.length >= 2) {
+            // Remove oldest slot if we already have 2
+            slots[0].remove();
+        }
 
         // Set the start time to the next 15-minute interval from now
         const now = new Date();
         const minutes = now.getMinutes();
         const remainder = 15 - (minutes % 15);
         let startTime = new Date(now);
-        startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
+        startTime.setMinutes(minutes + remainder, 0, 0);
 
-        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
-        const countdownTarget = new Date(startTime.getTime() - 1 * 60 * 1000); // 1 minute before start
-        const countdown = Math.floor((countdownTarget - now) / 1000); // Countdown until 1 minute before start
+        const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+        const countdownTarget = new Date(startTime.getTime() - 1 * 60 * 1000);
+        const countdown = Math.floor((countdownTarget - now) / 1000);
 
-        // Create a single session slot
+        // Create new slot
         const slot = {
             startTime: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             countdown: countdown > 0 ? countdown : 0,
             price: "Free",
-            status: countdown > 0 ? "Available" : "Taken" // Set initial status based on countdown
+            status: countdown > 0 ? "Available" : "Taken"
         };
-
-        console.log("Next session created:", slot);
 
         const block = document.createElement("div");
         block.className = "time-slot";
@@ -108,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
         grid.appendChild(block);
 
-        // Start the countdown for this session if it's available
         if (slot.status === "Available") {
             startCountdown(block, slot.countdown);
         }
@@ -126,8 +128,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 slotElement.querySelector("span").textContent = "Taken";
                 slotElement.style.backgroundColor = "#ffd7d7";
 
-                // Load the next session after a short delay
-                setTimeout(displayNextSession, 1000);
+                // Add next session while keeping current one
+                displayNextSession();
             } else {
                 timeLeft--;
                 countdownElem.textContent = formatCountdown(timeLeft);
