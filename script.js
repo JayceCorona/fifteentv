@@ -469,7 +469,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Add this to your existing JavaScript
-    const socket = io();
+    const socket = io('http://your-server-url.com');
     let username = null;
 
     // Join chat

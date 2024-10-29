@@ -1,57 +1,33 @@
 const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+
 const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
-
-// Serve static files from the current directory
-app.use(express.static('./'));
-
-// Add a specific route for your main page
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
-
-// Keep your existing routes here
-app.get('/api/schedule', (req, res) => {
-    // Your existing schedule route logic
-});
-
-// Store connected users
-const users = new Set();
-
-io.on('connection', (socket) => {
-    let username = null;
-
-    socket.on('join', (name) => {
-        username = name;
-        users.add(username);
-        
-        // Broadcast to all clients that a new user joined
-        io.emit('userJoined', username);
-        
-        // Send current users list to the new user
-        socket.emit('userList', Array.from(users));
-    });
-
-    socket.on('chatMessage', (message) => {
-        if (username) {
-            io.emit('message', {
-                username: username,
-                text: message,
-                timestamp: Date.now()
-            });
-        }
-    });
-
-    socket.on('disconnect', () => {
-        if (username) {
-            users.delete(username);
-            io.emit('userLeft', username);
-        }
-    });
-});
+const server = http.createServer(app);
+const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
+
+// Serve static files (e.g., HTML, CSS, JS) in the root directory
+app.use(express.static(__dirname));
+
+// Handle new WebSocket connections
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // Listen for chat messages from this client
+    socket.on('chat message', (msg) => {
+        // Broadcast message to all clients
+        io.emit('chat message', msg);
+    });
+
+    // Handle client disconnecting
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
+});
+
+// Start the server
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-}); 
+});
