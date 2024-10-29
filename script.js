@@ -13,15 +13,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const now = new Date();
     const minutes = now.getMinutes();
     const remainder = 15 - (minutes % 15);
-    const startTime = new Date(now);
-    startTime.setMinutes(minutes + remainder, 0, 0); // Next 15-minute segment
+    let startTime = new Date(now);
+    startTime.setMinutes(minutes + remainder, 0, 0); // Set to next 15-minute segment
 
-    console.log("Calculated start time:", startTime); // Debug log for the correct start time
+    console.log("Calculated start time:", startTime); // Debug start time
 
-    const endLimit = new Date(startTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours from start time
+    // Define the end limit as 24 hours from `now`
+    const endLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+    console.log("End limit:", endLimit); // Debug end limit
+
     const slots = [];
 
-    // Generate 15-minute slots up to 24 hours from the initial start time
+    // Generate 15-minute slots up to 24 hours from `now`
     while (startTime < endLimit) {
         const endTime = new Date(startTime.getTime() + 15 * 60 * 1000); // 15 minutes later
         const countdownTarget = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 minutes before start
@@ -39,7 +42,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         console.log("Slot created:", slots[slots.length - 1]); // Log each slot for debugging
 
-        startTime.setTime(endTime.getTime()); // Move to the next 15-minute slot
+        // Advance startTime by 15 minutes
+        startTime = new Date(startTime.getTime() + 15 * 60 * 1000); // Update `startTime` to next slot
     }
 
     console.log("Total slots generated:", slots.length);
