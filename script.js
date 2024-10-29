@@ -5,9 +5,9 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!grid) {
         console.error("Grid element not found");
         return;
-    }
+    }     
 
-    console.log("Grid element found");
+    console.log("Grid elsdffffdddement found");
 
     // Calculate the next 15-minute interval
     const now = new Date();
