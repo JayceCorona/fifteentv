@@ -19,22 +19,33 @@ async function initializeStreamChat() {
             body: JSON.stringify({ userId }),
         });
         
-        const responseData = await response.json();
+        // Log the raw response
+        const responseText = await response.text();
+        console.log('Raw server response:', responseText);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}, message: ${responseData.error || 'Unknown error'}`);
+        let responseData;
+        try {
+            responseData = JSON.parse(responseText);
+            console.log('Parsed response data:', responseData);
+        } catch (e) {
+            console.error('Failed to parse response:', e);
+            throw new Error('Invalid server response');
         }
-        
-        console.log('Token received');
 
         if (!responseData.token) {
-            throw new Error('No token received from server');
+            throw new Error('No token in response');
         }
 
         // Initialize Stream Chat client
-        console.log('Initializing client...');
+        console.log('Initializing Stream client...');
+        if (typeof StreamChat === 'undefined') {
+            console.error('StreamChat is not defined. Check if the SDK is loaded.');
+            throw new Error('StreamChat SDK not loaded');
+        }
+
         chatClient = StreamChat.getInstance('g9m53zqntv69');
-        
+        console.log('Stream client created');
+
         // Connect user
         console.log('Connecting user...');
         await chatClient.connectUser(
@@ -47,25 +58,29 @@ async function initializeStreamChat() {
         console.log('User connected successfully');
 
         // Create or join a channel
-        console.log('Creating/joining channel...');
+        console.log('Creating channel...');
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat',
         });
         
-        // Initialize the channel
+        console.log('Watching channel...');
         await channel.watch();
         console.log('Channel initialized successfully');
-        
-        // Set up message handlers
-        setupMessageHandlers();
-        
+
+        // Add message listener
+        channel.on('message.new', event => {
+            console.log('New message received:', event.message);
+            appendMessage(event.message);
+        });
+
         return true;
     } catch (error) {
         console.error('Error in initializeStreamChat:', error);
-        // Log more details about the error
-        if (error.response) {
-            console.error('Error response:', await error.response.text());
-        }
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         return false;
     }
 }
@@ -166,6 +181,13 @@ function appendMessage(message) {
 // Make sure this is in your DOMContentLoaded event
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("Script loaded");
+    
+    // Check if Stream Chat SDK is loaded
+    if (typeof StreamChat === 'undefined') {
+        console.error('StreamChat SDK not found. Check script inclusion.');
+    } else {
+        console.log('StreamChat SDK found');
+    }
     
     // Initialize Stream Chat
     const chatInitialized = await initializeStreamChat();
@@ -548,8 +570,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             if (!chatClient || !channel) {
                 console.error('Chat not initialized properly');
-                console.log('Chat client:', chatClient);
-                console.log('Channel:', channel);
+                console.error('Chat client:', chatClient);
+                console.error('Channel:', channel);
                 return;
             }
             
