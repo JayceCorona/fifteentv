@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
             endTime: endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             countdown: countdown > 0 ? countdown : 0,
             price: "Free",
-            status: "Available"
+            status: countdown > 0 ? "Available" : "Taken" // Set initial status based on countdown
         };
 
         console.log("Next session created:", slot);
@@ -48,8 +48,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
         grid.appendChild(block);
 
-        // Start the countdown for this session
-        startCountdown(block, slot.countdown);
+        // Start the countdown for this session if it's available
+        if (slot.status === "Available") {
+            startCountdown(block, slot.countdown);
+        }
     }
 
     // Function to start and handle countdown for a given session
@@ -64,8 +66,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 slotElement.querySelector("span").textContent = "Taken";
                 slotElement.style.backgroundColor = "#ffd7d7";
 
-                // Display the next session after countdown ends
-                setTimeout(displayNextSession, 1000); // Small delay before displaying the next session
+                // Load the next session after a short delay
+                setTimeout(displayNextSession, 1000);
             } else {
                 timeLeft--;
                 countdownElem.textContent = formatCountdown(timeLeft);
@@ -83,4 +85,3 @@ document.addEventListener("DOMContentLoaded", function() {
     // Display the initial session when the page loads
     displayNextSession();
 });
-
