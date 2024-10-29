@@ -539,4 +539,59 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(() => {
         updateCountdown();
     }, 1000);
+
+    // Add this near the top of your DOMContentLoaded event
+    const sendButton = document.getElementById('sendButton');
+    const messageInput = document.getElementById('messageInput');
+
+    if (sendButton && messageInput) {
+        console.log('Found chat elements:', { sendButton, messageInput });
+        
+        // Direct click handler
+        sendButton.onclick = async function() {
+            console.log('Send button clicked');
+            const text = messageInput.value.trim();
+            
+            if (!text) {
+                console.log('No message text');
+                return;
+            }
+            
+            if (!channel) {
+                console.error('Channel not initialized');
+                return;
+            }
+
+            try {
+                console.log('Sending message:', text);
+                const response = await channel.sendMessage({
+                    text: text
+                });
+                
+                console.log('Message sent:', response);
+                messageInput.value = '';
+                
+                // Manually append message
+                appendMessage({
+                    text: text,
+                    user: {
+                        name: `User ${chatClient.user.id.slice(-4)}`
+                    },
+                    created_at: new Date()
+                });
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+        // Enter key handler
+        messageInput.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                console.log('Enter pressed');
+                sendButton.click();
+            }
+        };
+    } else {
+        console.error('Chat elements not found');
+    }
 }); 

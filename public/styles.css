@@ -294,7 +294,9 @@ video::-webkit-media-controls {
 }
 
 .chat-section {
+    width: 300px;
     height: 100%;
+    border-left: 1px solid #ddd;
     display: flex;
     flex-direction: column;
 }
@@ -303,7 +305,6 @@ video::-webkit-media-controls {
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: white;
 }
 
 .chat-messages {
@@ -348,6 +349,8 @@ video::-webkit-media-controls {
     border-top: 1px solid #ddd;
     display: flex;
     gap: 10px;
+    background: white;
+    z-index: 1;
 }
 
 .chat-input input {
