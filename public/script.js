@@ -24,7 +24,7 @@ async function initializeStreamChat() {
         }
         
         const { token } = await response.json();
-        console.log('Token received');
+        console.log('Token received:', token);
 
         // Initialize Stream Chat client
         console.log('Initializing client...');
@@ -39,7 +39,7 @@ async function initializeStreamChat() {
             },
             token
         );
-        console.log('User connected');
+        console.log('User connected successfully');
 
         // Create or join a channel
         console.log('Creating/joining channel...');
@@ -49,26 +49,15 @@ async function initializeStreamChat() {
         
         // Initialize the channel
         await channel.watch();
-        console.log('Channel initialized');
+        console.log('Channel initialized successfully');
 
-        // Set up message listener
-        channel.on('message.new', event => {
-            console.log('New message received:', event.message);
-            appendMessage(event.message);
-        });
+        // Verify channel is working
+        console.log('Channel state:', channel.state);
 
-        // Load previous messages
-        const state = await channel.watch();
-        state.messages.forEach(message => {
-            appendMessage(message);
-        });
-
-        // Set up message sending
-        setupMessageHandlers();
-
-        console.log('Stream Chat initialized successfully');
+        return true;
     } catch (error) {
-        console.error('Error initializing chat:', error);
+        console.error('Error in initializeStreamChat:', error);
+        return false;
     }
 }
 
@@ -166,15 +155,12 @@ function appendMessage(message) {
 }
 
 // Make sure this is in your DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log("Script loaded");
     
     // Initialize Stream Chat
-    initializeStreamChat().then(() => {
-        console.log('Chat initialization completed');
-    }).catch(error => {
-        console.error('Chat initialization failed:', error);
-    });
+    const chatInitialized = await initializeStreamChat();
+    console.log('Chat initialization result:', chatInitialized);
     
     // Initialize schedule grid and navigation
     setupScheduleGrid();
@@ -563,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
-                console.log('Sending message:', text);
+                console.log('Attempting to send message:', text);
                 const response = await channel.sendMessage({
                     text: text
                 });
@@ -581,6 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } catch (error) {
                 console.error('Error sending message:', error);
+                console.error('Channel state:', channel?.state);
+                console.error('Chat client state:', chatClient?.state);
             }
         };
 
