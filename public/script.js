@@ -1,18 +1,96 @@
+let chatClient;
+let channel;
+
+async function initializeStreamChat() {
+    try {
+        // Generate a random user ID if needed
+        const userId = 'user-' + Math.random().toString(36).substring(7);
+        
+        // Get token from your server
+        const response = await fetch('/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId }),
+        });
+        const { token } = await response.json();
+
+        // Initialize Stream Chat client
+        chatClient = StreamChat.getInstance('g9m53zqntv69'); // Your actual API key
+        await chatClient.connectUser(
+            {
+                id: userId,
+                name: `User ${userId.slice(-4)}`,
+            },
+            token
+        );
+
+        // Create or join a channel
+        channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
+            name: 'Fifteen.tv Chat',
+        });
+        await channel.watch();
+
+        // Set up message listener
+        channel.on('message.new', event => {
+            appendMessage(event.message);
+        });
+
+        // Remove the old Socket.IO message handling
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                try {
+                    await channel.sendMessage({ text });
+                    messageInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+        }
+
+        // Update event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+    } catch (error) {
+        console.error('Error initializing chat:', error);
+    }
+}
+
+function appendMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    messageDiv.innerHTML = `
+        <span class="username">${message.user.name}</span>
+        <span class="timestamp">${new Date(message.created_at).toLocaleTimeString()}</span>
+        <div class="text">${message.text}</div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Script loaded");
-
+    
+    // Initialize Stream Chat
+    initializeStreamChat();
+    
     // Initialize schedule grid and navigation
     setupScheduleGrid();
   
     // Initialize glitch effect
     createGlitchText();
     setInterval(intensifyGlitch, 100); // Run glitch effect more frequently
-
-    // Socket.io setup
-    const socket = io();
-    const chatMessages = document.getElementById('chatMessages');
-    const messageInput = document.getElementById('messageInput');
-    const sendButton = document.getElementById('sendButton');
 
     // Video player elements
     const video = document.getElementById('mainPlayer');
@@ -22,34 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const progress = document.getElementById('progress');
     const currentTimeSpan = document.getElementById('currentTime');
     const durationSpan = document.getElementById('duration');
-
-    // Chat functionality
-    function sendMessage() {
-        const message = messageInput.value.trim();
-        if (message) {
-            socket.emit('chat message', message);
-            messageInput.value = '';
-        }
-    }
-
-    sendButton.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
-
-    socket.on('chat message', (msg) => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        messageDiv.innerHTML = `
-            <span class="username">User ${msg.userId.slice(0, 4)}</span>
-            <span class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-            <div class="text">${msg.text}</div>
-        `;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
 
     // Video player functionality
     playPauseBtn.addEventListener('click', () => {
