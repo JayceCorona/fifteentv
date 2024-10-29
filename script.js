@@ -467,4 +467,74 @@ document.addEventListener("DOMContentLoaded", function() {
             displayNextSession();
         }
     });
+
+    // Add this to your existing JavaScript
+    const socket = io();
+    let username = null;
+
+    // Join chat
+    function joinChat() {
+        username = prompt('Enter your username:');
+        if (username) {
+            socket.emit('join', username);
+        }
+    }
+
+    // Send message
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+        
+        if (message && username) {
+            socket.emit('chatMessage', message);
+            messageInput.value = '';
+        }
+    }
+
+    // Handle received messages
+    socket.on('message', (message) => {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `
+            <span class="username">${message.username}</span>
+            <span class="timestamp">${new Date(message.timestamp).toLocaleTimeString()}</span>
+            <div class="text">${message.text}</div>
+        `;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    // Handle user events
+    socket.on('userJoined', (username) => {
+        addSystemMessage(`${username} joined the chat`);
+    });
+
+    socket.on('userLeft', (username) => {
+        addSystemMessage(`${username} left the chat`);
+    });
+
+    function addSystemMessage(text) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'system-message';
+        messageElement.textContent = text;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Initialize chat
+    document.addEventListener('DOMContentLoaded', () => {
+        joinChat();
+        
+        const sendButton = document.getElementById('sendButton');
+        const messageInput = document.getElementById('messageInput');
+        
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    });
 });
