@@ -1,20 +1,31 @@
 let chatClient;
 let channel;
 
-// Simple chat functionality
+// Modified chat functionality with Stream integration
 function setupChat() {
     const sendButton = document.getElementById('sendButton');
     const messageInput = document.getElementById('messageInput');
     const chatMessages = document.getElementById('chatMessages');
 
     if (sendButton && messageInput && chatMessages) {
-        function addMessage(text, isOutgoing = true) {
+        function addMessage(text, isOutgoing = true, userId = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
-            messageDiv.innerHTML = `
+            
+            let messageHTML = `
                 <div class="text">${text}</div>
                 <div class="timestamp">${new Date().toLocaleTimeString()}</div>
             `;
+            
+            // Add user identifier for incoming messages
+            if (!isOutgoing && userId) {
+                messageHTML = `
+                    <div class="user-id">User ${userId.substring(0, 6)}</div>
+                    ${messageHTML}
+                `;
+            }
+            
+            messageDiv.innerHTML = messageHTML;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -22,15 +33,17 @@ function setupChat() {
         async function handleSend() {
             const text = messageInput.value.trim();
             if (text) {
+                // Show message in UI immediately
                 addMessage(text, true);
                 
+                // Send to Stream if channel exists
                 if (channel) {
                     try {
                         await channel.sendMessage({
                             text: text
                         });
                     } catch (error) {
-                        console.error('Error sending message to Stream:', error);
+                        console.error('Error sending message:', error);
                     }
                 }
                 
@@ -47,25 +60,15 @@ function setupChat() {
     }
 }
 
-// Separate function to handle incoming Stream messages
-function handleStreamMessage(event) {
-    if (chatClient && event.user.id !== chatClient.user.id) {
-        const chatMessages = document.getElementById('chatMessages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message incoming';
-        messageDiv.innerHTML = `
-            <div class="text">${event.message.text}</div>
-            <div class="timestamp">${new Date().toLocaleTimeString()}</div>
-        `;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-}
-
+// Add Stream Chat initialization
 async function initializeStreamChat() {
     try {
-        const userId = 'user-' + Math.random().toString(36).substring(7);
+        // Generate or retrieve existing user ID
+        const userId = localStorage.getItem('chatUserId') || 
+                      'user-' + Math.random().toString(36).substring(7);
+        localStorage.setItem('chatUserId', userId);
         
+        // Get token from server
         const response = await fetch('/token', {
             method: 'POST',
             headers: {
@@ -74,28 +77,48 @@ async function initializeStreamChat() {
             body: JSON.stringify({ userId }),
         });
         
+        if (!response.ok) {
+            throw new Error('Failed to get token');
+        }
+
         const { token } = await response.json();
         
+        // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
             {
                 id: userId,
-                name: 'User ' + userId,
+                name: `User ${userId.substring(0, 6)}`,
             },
             token
         );
 
+        // Join main channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
             created_by_id: userId,
         });
 
         await channel.watch();
+        console.log('Successfully connected to chat');
 
-        channel.on('message.new', handleStreamMessage);
+        // Handle incoming messages
+        channel.on('message.new', event => {
+            // Only show messages from others (own messages already shown)
+            if (event.user.id !== chatClient.user.id) {
+                addMessage(event.message.text, false, event.user.id);
+            }
+        });
 
     } catch (error) {
         console.error('Error initializing chat:', error);
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'system-message';
+            errorDiv.textContent = 'Failed to connect to chat. Please refresh the page.';
+            chatMessages.appendChild(errorDiv);
+        }
     }
 }
 

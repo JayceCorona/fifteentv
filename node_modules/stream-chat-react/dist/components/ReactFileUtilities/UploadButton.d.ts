@@ -1,0 +1,6 @@
+import React, { ComponentProps } from 'react';
+export type UploadButtonProps = {
+    onFileChange: (files: Array<File>) => void;
+    resetOnChange?: boolean;
+} & Omit<ComponentProps<'input'>, 'type' | 'onChange'>;
+export declare const UploadButton: ({ onFileChange, resetOnChange, ...rest }: UploadButtonProps) => React.JSX.Element;
