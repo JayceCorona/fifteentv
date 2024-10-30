@@ -116,6 +116,7 @@ async function initializeStreamChat() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    await initializeStreamChat();
     console.log("Script loaded");
 
     // Add this line
@@ -123,9 +124,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Make sure this line is here and not commented out
     setupScheduleGrid();
-
-    // Initialize Stream Chat
-    await initializeStreamChat();
 
     // Initialize schedule grid and navigation
     setupScheduleGrid();
