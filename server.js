@@ -30,14 +30,11 @@ app.post('/token', async (req, res) => {
             name: `User ${userId.substring(0, 6)}`,
         });
 
-        // Generate token with channel capabilities
-        const token = serverClient.createToken(userId, { 
-            exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour expiration
-            chat: {
-                read: true,
-                write: true,
-            }
-        });
+        // Calculate expiration time properly (1 hour from now)
+        const expirationTime = Math.floor(Date.now() / 1000) + (60 * 60);
+
+        // Generate token with fixed expiration format
+        const token = serverClient.createToken(userId);  // Removed the options object
 
         console.log("Token generated successfully");
         res.json({ token });
