@@ -107,22 +107,55 @@ function addMessage(text, isOutgoing = true, userId = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-wrapper ${isOutgoing ? 'outgoing' : 'incoming'}`;
     
-    let messageHTML = `
-        <div class="message-bubble">
-            ${!isOutgoing && userId ? `<div class="user-id">User ${userId.substring(0, 6)}</div>` : ''}
-            <div class="message-text">${text}</div>
-            <div class="message-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-    `;
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    messageDiv.innerHTML = messageHTML;
+    if (isOutgoing) {
+        // Outgoing message style (right-aligned, blue)
+        messageDiv.innerHTML = `
+            <div class="message-bubble outgoing-bubble">
+                <div class="message-text">${text}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            </div>
+        `;
+    } else {
+        // Incoming message style (left-aligned, grey with user ID)
+        messageDiv.innerHTML = `
+            <div class="message-bubble incoming-bubble">
+                <div class="user-id">User ${userId ? userId.substring(0, 6) : 'Unknown'}</div>
+                <div class="message-text">${text}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            </div>
+        `;
+    }
+    
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Add this function to periodically refresh chat
+function startChatRefresh() {
+    setInterval(async () => {
+        if (channel) {
+            try {
+                const state = await channel.watch();
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = ''; // Clear existing messages
+                
+                state.messages.forEach(message => {
+                    const isOutgoing = message.user.id === chatClient.user.id;
+                    addMessage(message.text, isOutgoing, message.user.id);
+                });
+            } catch (error) {
+                console.error('Error refreshing chat:', error);
+            }
+        }
+    }, 100); // Refresh every 0.1 seconds
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
     setupChat();
     await initializeStreamChat();
+    startChatRefresh(); // Add this line
     console.log("Script loaded");
 
     // Add this line
@@ -558,12 +591,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             border-left: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
-            background: #f5f5f5;
+            background: #f8f9fa;
         }
 
         .chat-header {
             padding: 15px;
-            background: white;
+            background: #343a40;
+            color: white;
             border-bottom: 1px solid #e0e0e0;
             font-weight: bold;
         }
@@ -574,7 +608,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
         .message-wrapper {
@@ -593,48 +627,53 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         .message-bubble {
             max-width: 80%;
-            padding: 8px 12px;
-            border-radius: 16px;
+            padding: 10px 14px;
+            border-radius: 18px;
             position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .outgoing .message-bubble {
-            background: #0084ff;
+        .outgoing-bubble {
+            background: linear-gradient(135deg, #00B2FF, #006AFF);
             color: white;
             border-bottom-right-radius: 4px;
             margin-right: 8px;
         }
 
-        .incoming .message-bubble {
-            background: #e4e4e4;
-            color: black;
+        .incoming-bubble {
+            background: white;
+            color: #343a40;
             border-bottom-left-radius: 4px;
             margin-left: 8px;
+            border: 1px solid #e0e0e0;
         }
 
         .message-text {
             margin-bottom: 4px;
             word-wrap: break-word;
+            font-size: 0.95em;
+            line-height: 1.4;
         }
 
         .user-id {
-            font-size: 0.7em;
-            color: #666;
+            font-size: 0.75em;
+            color: #6c757d;
             margin-bottom: 4px;
+            font-weight: 500;
         }
 
         .message-timestamp {
             font-size: 0.7em;
-            opacity: 0.7;
+            opacity: 0.8;
             text-align: right;
         }
 
-        .outgoing .message-timestamp {
-            color: rgba(255, 255, 255, 0.7);
+        .outgoing-bubble .message-timestamp {
+            color: rgba(255, 255, 255, 0.9);
         }
 
-        .incoming .message-timestamp {
-            color: #666;
+        .incoming-bubble .message-timestamp {
+            color: #6c757d;
         }
 
         .chat-input-container {
@@ -647,35 +686,42 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         .chat-input-container input {
             flex: 1;
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
+            padding: 10px 16px;
+            border: 1px solid #ced4da;
+            border-radius: 24px;
             outline: none;
             font-size: 14px;
+            transition: border-color 0.2s;
         }
 
         .chat-input-container input:focus {
-            border-color: #0084ff;
+            border-color: #006AFF;
+            box-shadow: 0 0 0 2px rgba(0,106,255,0.1);
         }
 
         .chat-input-container button {
-            padding: 8px 16px;
-            background: #0084ff;
+            padding: 8px 20px;
+            background: #006AFF;
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 24px;
             cursor: pointer;
             font-weight: 500;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
 
         .chat-input-container button:hover {
-            background: #0073e6;
+            background: #0056CC;
+            transform: translateY(-1px);
+        }
+
+        .chat-input-container button:active {
+            transform: translateY(0);
         }
 
         .system-message {
             text-align: center;
-            color: #666;
+            color: #6c757d;
             background-color: rgba(0, 0, 0, 0.05);
             padding: 8px;
             margin: 8px;
