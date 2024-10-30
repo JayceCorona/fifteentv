@@ -196,62 +196,6 @@ function startChatRefresh() {
     }, 2000);
 }
 
-// 1. Move style declarations to the top of the file
-const upcomingStyle = `
-    .time-slot.upcoming {
-        border-left: 4px solid #9E9E9E;
-        opacity: 0.8;
-    }
-`;
-
-const concludedStyle = `
-    .time-slot.concluded {
-        border-left: 4px solid #9E9E9E;
-        opacity: 0.6;
-        background: #f5f5f5;
-    }
-
-    .concluded-text {
-        color: #666;
-        font-style: italic;
-    }
-`;
-
-// 2. Update the server token endpoint
-app.post('/token', async (req, res) => {
-    try {
-        const { userId } = req.body;
-        console.log("Generating token for user:", userId);
-        
-        // Create user with full channel permissions
-        await serverClient.upsertUser({
-            id: userId,
-            role: 'admin',
-            name: `User ${userId.substring(0, 6)}`,
-        });
-
-        // Generate token without explicit expiration
-        const token = serverClient.createToken(userId);
-
-        console.log("Token generated successfully");
-        res.json({ token });
-    } catch (error) {
-        console.error("Token generation error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// 3. Update the style injection in DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Add styles first
-    const styleElement = document.createElement('style');
-    styleElement.textContent = upcomingStyle + concludedStyle + chatStyles;
-    document.head.appendChild(styleElement);
-
-    // Then initialize chat
-    setupChat();
-    initializeStreamChat();
-}); 
 // 1. First, move the style declaration to the top of the file
 const chatStyles = `
     .chat-messages {
