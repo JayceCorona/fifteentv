@@ -42,7 +42,6 @@ function setupChat() {
 
 // Add Stream Chat initialization
 async function initializeStreamChat() {
-    // Prevent multiple simultaneous connection attempts
     if (isConnecting) {
         console.log("Connection attempt already in progress...");
         return;
@@ -51,7 +50,6 @@ async function initializeStreamChat() {
     try {
         isConnecting = true;
         connectionAttempts++;
-        console.log(`Connection attempt ${connectionAttempts} of ${MAX_ATTEMPTS}`);
 
         // Disconnect existing client if it exists
         if (chatClient) {
@@ -64,24 +62,20 @@ async function initializeStreamChat() {
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
 
-        console.log("Requesting token for user:", userId);
+        // Initialize Stream Chat client
+        chatClient = StreamChat.getInstance('g9m53zqntv69');
+        
+        // Get token from your server
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId })
         });
 
-        if (!response.ok) {
-            throw new Error(`Failed to get token: ${await response.text()}`);
-        }
-
+        if (!response.ok) throw new Error(`Failed to get token: ${await response.text()}`);
         const { token } = await response.json();
-        console.log("Token received successfully");
 
-        // Initialize Stream Chat client
-        chatClient = new StreamChat('g9m53zqntv69');
+        // Connect user
         await chatClient.connectUser(
             {
                 id: userId,
@@ -89,67 +83,78 @@ async function initializeStreamChat() {
             },
             token
         );
-        console.log("Connected to Stream chat");
 
-        // Initialize channel
+        // Initialize channel with more options
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
-            name: 'Fifteen.tv Chat Room'
+            name: 'Fifteen.tv Chat Room',
+            members: [userId],
+            configs: {
+                typing_events: true,
+                read_events: true,
+                connect_events: true
+            }
         });
 
         await channel.watch();
-        console.log("Channel watching started");
 
-        // Add message listener
-        channel.on('message.new', event => {
-            const isOutgoing = event.user.id === chatClient.user.id;
-            addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
-        });
+        // Add event listeners
+        channel.on('message.new', handleNewMessage);
+        channel.on('typing.start', handleTypingStart);
+        channel.on('typing.stop', handleTypingStop);
+
+        // Reset connection state
+        isConnecting = false;
+        connectionAttempts = 0;
 
         // Show success message
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'system-message success';
-            successDiv.textContent = 'Connected to chat successfully!';
-            chatMessages.appendChild(successDiv);
-            setTimeout(() => successDiv.remove(), 3000);
-        }
-
-        // Reset connection attempts on success
-        connectionAttempts = 0;
-        isConnecting = false;
+        showSystemMessage('Connected to chat!', 'success');
 
     } catch (error) {
         console.error('Chat initialization error:', error);
-        isConnecting = false;
+        handleConnectionError(error);
+    }
+}
 
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'system-message error';
+// Add these helper functions
+function handleNewMessage(event) {
+    if (!processedMessageIds.has(event.message.id)) {
+        processedMessageIds.add(event.message.id);
+        const isOutgoing = event.user.id === chatClient.user.id;
+        addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
+    }
+}
 
-            if (error.message.includes('Too many connections')) {
-                if (connectionAttempts >= MAX_ATTEMPTS) {
-                    errorDiv.textContent = 'Too many connection attempts. Waiting 30 seconds...';
-                    setTimeout(() => {
-                        connectionAttempts = 0;
-                        initializeStreamChat();
-                    }, COOLDOWN_PERIOD);
-                } else {
-                    errorDiv.textContent = 'Connection limit reached. Retrying...';
-                    setTimeout(() => initializeStreamChat(), 5000);
-                }
-            } else {
-                errorDiv.textContent = 'Connection failed. Retrying...';
-                if (connectionAttempts < MAX_ATTEMPTS) {
-                    setTimeout(() => initializeStreamChat(), 5000);
-                } else {
-                    errorDiv.textContent = 'Unable to connect. Please refresh the page.';
-                }
-            }
-            
-            chatMessages.appendChild(errorDiv);
-        }
+function handleTypingStart(event) {
+    const typingIndicator = document.getElementById('typingIndicator') || 
+                           createTypingIndicator();
+    typingIndicator.textContent = `${event.user.name} is typing...`;
+    typingIndicator.style.display = 'block';
+}
+
+function handleTypingStop() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'none';
+    }
+}
+
+function createTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'typingIndicator';
+    indicator.className = 'typing-indicator';
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.appendChild(indicator);
+    return indicator;
+}
+
+function showSystemMessage(text, type = 'info') {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `system-message ${type}`;
+        messageDiv.textContent = text;
+        chatMessages.appendChild(messageDiv);
+        setTimeout(() => messageDiv.remove(), 3000);
     }
 }
 

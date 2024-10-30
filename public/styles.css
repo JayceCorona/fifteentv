@@ -591,3 +591,30 @@ video::-webkit-media-controls {
 .schedule-nav.visible {
     display: flex;
 }
+
+.typing-indicator {
+    font-size: 0.8em;
+    color: #666;
+    padding: 8px;
+    margin: 4px 0;
+    font-style: italic;
+    display: none;
+}
+
+.system-message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.system-message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.system-message.info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
