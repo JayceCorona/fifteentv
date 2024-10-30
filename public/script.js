@@ -1,70 +1,64 @@
+const chatStyles = document.createElement('style');
+chatStyles.textContent = `
+    .chat-section {
+        width: 300px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .system-message {
+        text-align: center;
+        padding: 8px;
+        margin: 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .system-message.error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+
+    .system-message.success {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+`;
+
 let chatClient;
 let channel;
 let processedMessageIds = new Set();
 
-// Add connection state tracking
-let isConnecting = false;
-let connectionAttempts = 0;
-const MAX_ATTEMPTS = 3;
-const COOLDOWN_PERIOD = 30000; // 30 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    document.head.appendChild(chatStyles);
+    
+    setupScheduleGrid();
+    createGlitchText();
+    // ... all other existing time slot initializations ...
 
-// Modified chat functionality with Stream integration
-function setupChat() {
-    const sendButton = document.getElementById('sendButton');
-    const messageInput = document.getElementById('messageInput');
+    setupChat();
+    initializeStreamChat();
+});
 
-    if (sendButton && messageInput) {
-        async function handleSend() {
-            const text = messageInput.value.trim();
-            if (text) {
-                if (channel) {
-                    try {
-                        await channel.sendMessage({
-                            text: text
-                        });
-                    } catch (error) {
-                        console.error('Error sending message:', error);
-                    }
-                }
-                
-                messageInput.value = '';
-            }
-        }
-
-        sendButton.addEventListener('click', handleSend);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSend();
-            }
-        });
-    }
-}
-
-// Add Stream Chat initialization
 async function initializeStreamChat() {
-    // Prevent multiple simultaneous connection attempts
-    if (isConnecting) {
-        console.log("Connection attempt already in progress...");
-        return;
-    }
-
     try {
-        isConnecting = true;
-        connectionAttempts++;
-        console.log(`Connection attempt ${connectionAttempts} of ${MAX_ATTEMPTS}`);
-
-        // Disconnect existing client if it exists
-        if (chatClient) {
-            await chatClient.disconnectUser();
-            chatClient = null;
-            channel = null;
-        }
-
         const userId = localStorage.getItem('chatUserId') || 
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
 
-        console.log("Requesting token for user:", userId);
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
@@ -78,9 +72,7 @@ async function initializeStreamChat() {
         }
 
         const { token } = await response.json();
-        console.log("Token received successfully");
-
-        // Initialize Stream Chat client
+        
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
             {
@@ -89,263 +81,31 @@ async function initializeStreamChat() {
             },
             token
         );
-        console.log("Connected to Stream chat");
 
-        // Initialize channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room'
         });
 
         await channel.watch();
-        console.log("Channel watching started");
 
-        // Add message listener
         channel.on('message.new', event => {
-            const isOutgoing = event.user.id === chatClient.user.id;
-            addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
+            if (!processedMessageIds.has(event.message.id)) {
+                processedMessageIds.add(event.message.id);
+                const isOutgoing = event.user.id === chatClient.user.id;
+                addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
+            }
         });
-
-        // Show success message
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'system-message success';
-            successDiv.textContent = 'Connected to chat successfully!';
-            chatMessages.appendChild(successDiv);
-            setTimeout(() => successDiv.remove(), 3000);
-        }
-
-        // Reset connection attempts on success
-        connectionAttempts = 0;
-        isConnecting = false;
 
     } catch (error) {
         console.error('Chat initialization error:', error);
-        isConnecting = false;
-
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'system-message error';
-
-            if (error.message.includes('Too many connections')) {
-                if (connectionAttempts >= MAX_ATTEMPTS) {
-                    errorDiv.textContent = 'Too many connection attempts. Waiting 30 seconds...';
-                    setTimeout(() => {
-                        connectionAttempts = 0;
-                        initializeStreamChat();
-                    }, COOLDOWN_PERIOD);
-                } else {
-                    errorDiv.textContent = 'Connection limit reached. Retrying...';
-                    setTimeout(() => initializeStreamChat(), 5000);
-                }
-            } else {
-                errorDiv.textContent = 'Connection failed. Retrying...';
-                if (connectionAttempts < MAX_ATTEMPTS) {
-                    setTimeout(() => initializeStreamChat(), 5000);
-                } else {
-                    errorDiv.textContent = 'Unable to connect. Please refresh the page.';
-                }
-            }
-            
+            errorDiv.textContent = 'Connection failed. Retrying...';
             chatMessages.appendChild(errorDiv);
         }
-    }
-}
-
-// Add this function to handle messages
-function addMessage(text, isOutgoing = true, userId = null, messageId = null) {
-    // Skip if we've already processed this message
-    if (messageId && processedMessageIds.has(messageId)) {
-        return;
-    }
-    
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    // Add message ID to processed set
-    if (messageId) {
-        processedMessageIds.add(messageId);
-    }
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-wrapper ${isOutgoing ? 'outgoing' : 'incoming'}`;
-    
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    messageDiv.innerHTML = `
-        ${!isOutgoing ? `<div class="user-id">User ${userId ? userId.substring(0, 6) : 'Unknown'}</div>` : ''}
-        <div class="message-bubble">
-            <div class="message-text">${text}</div>
-            <div class="message-timestamp">${timestamp}</div>
-        </div>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// Add this function to periodically refresh chat
-function startChatRefresh() {
-    setInterval(async () => {
-        if (channel) {
-            try {
-                const state = await channel.watch();
-                const chatMessages = document.getElementById('chatMessages');
-                
-                // Only update if there are new messages
-                const newMessages = state.messages.filter(msg => !processedMessageIds.has(msg.id));
-                if (newMessages.length > 0) {
-                    newMessages.forEach(message => {
-                        const isOutgoing = message.user.id === chatClient.user.id;
-                        addMessage(message.text, isOutgoing, message.user.id, message.id);
-                    });
-                }
-            } catch (error) {
-                if (!error.message.includes('Too many requests')) {
-                    console.error('Error refreshing chat:', error);
-                }
-            }
-        }
-    }, 2000);
-}
-
-// 1. First, move the style declaration to the top of the file
-const chatStyles = `
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-    // ... rest of your chat styles ...
-`;
-
-// 2. Update the token endpoint request
-async function initializeStreamChat() {
-    try {
-        console.log("Starting chat initialization...");
-        
-        const userId = localStorage.getItem('chatUserId') || 
-                      'user-' + Math.random().toString(36).substring(7);
-        localStorage.setItem('chatUserId', userId);
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                userId,
-                // Remove any expiration time from client request
-            })
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to get token: ${await response.text()}`);
-        }
-
-        const { token } = await response.json();
-        console.log("Token received successfully");
-        
-        chatClient = new StreamChat('g9m53zqntv69');
-        await chatClient.connectUser(
-            {
-                id: userId,
-                name: `User ${userId.substring(0, 6)}`,
-            },
-            token
-        );
-        console.log("Connected to Stream chat");
-
-        channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
-            name: 'Fifteen.tv Chat Room',
-        });
-
-        try {
-            await channel.watch();
-            console.log("Channel watching started");
-        } catch (error) {
-            console.error("Channel watch error:", error);
-            
-            // Show specific error message to user
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'system-message';
-                
-                if (error.message.includes('not allowed to perform action')) {
-                    errorDiv.textContent = 'Reconnecting to chat...';
-                    // Retry after a short delay
-                    setTimeout(() => initializeStreamChat(), 2000);
-                } else {
-                    errorDiv.textContent = 'Chat connection error. Please refresh the page.';
-                }
-                
-                chatMessages.appendChild(errorDiv);
-            }
-            throw error;
-        }
-
-        // Add message listener
-        channel.on('message.new', event => {
-            const isOutgoing = event.user.id === chatClient.user.id;
-            addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
-        });
-
-        // Clear any existing error messages
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            const existingErrors = chatMessages.querySelectorAll('.system-message');
-            existingErrors.forEach(error => error.remove());
-        }
-
-        // Load previous messages
-        const messages = await channel.watch();
-        messages.messages.forEach(message => {
-            const isOutgoing = message.user.id === chatClient.user.id;
-            addMessage(message.text, isOutgoing, message.user.id, message.id);
-        });
-
-        console.log("Chat initialization complete");
-
-    } catch (error) {
-        console.error('Chat initialization error:', error);
-        
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            // Clear existing error messages
-            const existingErrors = chatMessages.querySelectorAll('.system-message');
-            existingErrors.forEach(error => error.remove());
-            
-            // Add new error message
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'system-message';
-            
-            if (error.name === 'AbortError') {
-                errorDiv.textContent = 'Connection timeout. Retrying...';
-            } else if (error.message.includes('Too many requests')) {
-                errorDiv.textContent = 'Too many connections. Retrying...';
-            } else {
-                errorDiv.textContent = 'Connection failed. Retrying...';
-            }
-            
-            chatMessages.appendChild(errorDiv);
-        }
-        
-        // Retry connection after delay
-        console.log("Retrying connection in 5 seconds...");
-        setTimeout(() => {
-            console.log("Retrying connection now");
-            initializeStreamChat();
-        }, 5000);
+        setTimeout(() => initializeStreamChat(), 5000);
     }
 }
 
