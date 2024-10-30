@@ -11,8 +11,6 @@ function setupChat() {
         async function handleSend() {
             const text = messageInput.value.trim();
             if (text) {
-                addMessage(text, true);
-                
                 if (channel) {
                     try {
                         await channel.sendMessage({
@@ -76,9 +74,8 @@ async function initializeStreamChat() {
         
         // Add message listener
         channel.on('message.new', event => {
-            if (event.user.id !== chatClient.user.id) {
-                addMessage(event.message.text, false, event.user.id, event.message.id);
-            }
+            const isOutgoing = event.user.id === chatClient.user.id;
+            addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
         });
 
         // Load previous messages
