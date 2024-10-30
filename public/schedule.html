@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Your Slot - Fifteen.tv</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Add Stream Chat CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/stream-chat-react/dist/css/v2/index.css" />
-     <!-- Add this before your script.js -->
-    <script src="https://cdn.jsdelivr.net/npm/stream-chat@^8.14.0/dist/browser.min.js"></script>
 </head>
 <body>  
     <div class="content-wrapper">
@@ -45,21 +41,18 @@
             </section>
         </div>
 
-        <!-- New Chat Section -->
-        <section class="chat-section">
-            <div class="chat-header">
-                <h3>Live Chat</h3>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <!-- Messages will appear here -->
-            </div>
-            <div class="chat-input-container">
-                <input type="text" id="messageInput" placeholder="Type a message...">
-                <button id="sendButton">Send</button>
-            </div>
-        </section>
+        <!-- Replace the chat section with a React container -->
+        <section class="chat-section" id="chat-root"></section>
     </div>
 
+    <!-- Add React and ReactDOM -->
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    
+    <!-- Your existing script -->
     <script src="script.js"></script>
+
+    <!-- Add before closing body tag -->
+    <script src="bundle.js"></script>
 </body>
 </html>

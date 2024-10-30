@@ -294,12 +294,11 @@ video::-webkit-media-controls {
 }
 
 .chat-section {
-    width: 20%;
-    height: 100vh;
+    width: 300px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    border-left: 1px solid #e0e0e0;
+    background: #f8f9fa;
 }
 
 .chat-header {
@@ -617,4 +616,18 @@ video::-webkit-media-controls {
     color: #0c5460;
     background-color: #d1ecf1;
     border-color: #bee5eb;
+}
+
+/* Stream Chat overrides */
+.str-chat {
+    height: 100%;
+    width: 100%;
+}
+
+.str-chat__channel {
+    height: 100%;
+}
+
+.str-chat-channel {
+    height: 100%;
 }
