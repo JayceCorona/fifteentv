@@ -166,11 +166,8 @@ function startChatRefresh() {
 document.addEventListener('DOMContentLoaded', async function() {
     setupChat();
     await initializeStreamChat();
-    startChatRefresh(); // Add this line
+    startChatRefresh();
     console.log("Script loaded");
-
-    // Add this line
-    setupChat();
 
     // Make sure this line is here and not commented out
     setupScheduleGrid();
