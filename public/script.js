@@ -43,19 +43,26 @@ async function initializeStreamChat() {
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ userId }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
             throw new Error(`Failed to get token: ${await response.text()}`);
         }
 
         const { token } = await response.json();
+        console.log("Token received successfully");
         
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
@@ -65,18 +72,27 @@ async function initializeStreamChat() {
             },
             token
         );
+        console.log("Connected to Stream chat");
 
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
         });
 
         await channel.watch();
+        console.log("Channel watching started");
         
         // Add message listener
         channel.on('message.new', event => {
             const isOutgoing = event.user.id === chatClient.user.id;
             addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
         });
+
+        // Clear any existing error messages
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            const existingErrors = chatMessages.querySelectorAll('.system-message');
+            existingErrors.forEach(error => error.remove());
+        }
 
         // Load previous messages
         const messages = await channel.watch();
@@ -85,21 +101,38 @@ async function initializeStreamChat() {
             addMessage(message.text, isOutgoing, message.user.id, message.id);
         });
 
+        console.log("Chat initialization complete");
+
     } catch (error) {
         console.error('Chat initialization error:', error);
         
-        // Retry connection after delay if it's a rate limit error
-        if (error.message.includes('Too many requests')) {
-            setTimeout(initializeStreamChat, 5000); // Retry after 5 seconds
-        }
-        
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
+            // Clear existing error messages
+            const existingErrors = chatMessages.querySelectorAll('.system-message');
+            existingErrors.forEach(error => error.remove());
+            
+            // Add new error message
             const errorDiv = document.createElement('div');
             errorDiv.className = 'system-message';
-            errorDiv.textContent = 'Connecting to chat...';
+            
+            if (error.name === 'AbortError') {
+                errorDiv.textContent = 'Connection timeout. Retrying...';
+            } else if (error.message.includes('Too many requests')) {
+                errorDiv.textContent = 'Too many connections. Retrying...';
+            } else {
+                errorDiv.textContent = 'Connection failed. Retrying...';
+            }
+            
             chatMessages.appendChild(errorDiv);
         }
+        
+        // Retry connection after delay
+        console.log("Retrying connection in 5 seconds...");
+        setTimeout(() => {
+            console.log("Retrying connection now");
+            initializeStreamChat();
+        }, 5000);
     }
 }
 
@@ -162,7 +195,32 @@ function startChatRefresh() {
 
 document.addEventListener('DOMContentLoaded', async function() {
     setupChat();
-    await initializeStreamChat();
+    
+    // Try connecting multiple times
+    let retries = 0;
+    const maxRetries = 3;
+    
+    async function tryConnect() {
+        try {
+            await initializeStreamChat();
+        } catch (error) {
+            retries++;
+            if (retries < maxRetries) {
+                console.log(`Connection attempt ${retries + 1} of ${maxRetries}`);
+                setTimeout(tryConnect, 5000);
+            } else {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'system-message';
+                    errorDiv.textContent = 'Unable to connect to chat. Please refresh the page.';
+                    chatMessages.appendChild(errorDiv);
+                }
+            }
+        }
+    }
+    
+    tryConnect();
     startChatRefresh();
     console.log("Script loaded");
 
