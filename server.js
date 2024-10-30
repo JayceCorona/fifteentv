@@ -6,7 +6,7 @@ const app = express();
 
 // Add CORS middleware
 app.use(cors({
-    origin: 'https://fifteentv-a5b5844eddeb.herokuapp.com',
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -23,15 +23,23 @@ app.post('/token', async (req, res) => {
         const { userId } = req.body;
         console.log("Generating token for user:", userId);
         
-        // Create user with channel permissions
+        // Create user with explicit channel permissions
         await serverClient.upsertUser({
             id: userId,
             role: 'user',
             name: `User ${userId.substring(0, 6)}`,
         });
 
-        // Generate token without explicit expiration
-        const token = serverClient.createToken(userId);
+        // Generate token with explicit channel permissions
+        const token = serverClient.createToken(userId, {
+            user_id: userId,
+            exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24), // 24 hour expiration
+            capabilities: {
+                'read': true,
+                'write': true,
+                'publish': true
+            }
+        });
 
         console.log("Token generated successfully");
         res.json({ token });

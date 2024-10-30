@@ -78,26 +78,31 @@ async function initializeStreamChat() {
 
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
-            members: [userId],
-            created_by: { id: userId },
         });
 
         try {
             await channel.watch();
             console.log("Channel watching started");
         } catch (error) {
-            if (error.message.includes('not allowed to perform action')) {
-                try {
-                    await channel.create();
-                    await channel.watch();
-                    console.log("Channel created and watching started");
-                } catch (createError) {
-                    console.error("Channel creation error:", createError);
-                    throw createError;
+            console.error("Channel watch error:", error);
+            
+            // Show specific error message to user
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'system-message';
+                
+                if (error.message.includes('not allowed to perform action')) {
+                    errorDiv.textContent = 'Reconnecting to chat...';
+                    // Retry after a short delay
+                    setTimeout(() => initializeStreamChat(), 2000);
+                } else {
+                    errorDiv.textContent = 'Chat connection error. Please refresh the page.';
                 }
-            } else {
-                throw error;
+                
+                chatMessages.appendChild(errorDiv);
             }
+            throw error;
         }
 
         // Add message listener
@@ -269,26 +274,31 @@ async function initializeStreamChat() {
 
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
-            members: [userId],
-            created_by: { id: userId },
         });
 
         try {
             await channel.watch();
             console.log("Channel watching started");
         } catch (error) {
-            if (error.message.includes('not allowed to perform action')) {
-                try {
-                    await channel.create();
-                    await channel.watch();
-                    console.log("Channel created and watching started");
-                } catch (createError) {
-                    console.error("Channel creation error:", createError);
-                    throw createError;
+            console.error("Channel watch error:", error);
+            
+            // Show specific error message to user
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'system-message';
+                
+                if (error.message.includes('not allowed to perform action')) {
+                    errorDiv.textContent = 'Reconnecting to chat...';
+                    // Retry after a short delay
+                    setTimeout(() => initializeStreamChat(), 2000);
+                } else {
+                    errorDiv.textContent = 'Chat connection error. Please refresh the page.';
                 }
-            } else {
-                throw error;
+                
+                chatMessages.appendChild(errorDiv);
             }
+            throw error;
         }
 
         // Add message listener
