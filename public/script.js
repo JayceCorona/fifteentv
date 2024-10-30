@@ -89,11 +89,17 @@ async function initializeStreamChat() {
 
     } catch (error) {
         console.error('Chat initialization error:', error);
+        
+        // Retry connection after delay if it's a rate limit error
+        if (error.message.includes('Too many requests')) {
+            setTimeout(initializeStreamChat, 5000); // Retry after 5 seconds
+        }
+        
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'system-message';
-            errorDiv.textContent = `Failed to connect to chat: ${error.message}`;
+            errorDiv.textContent = 'Connecting to chat...';
             chatMessages.appendChild(errorDiv);
         }
     }
@@ -139,17 +145,23 @@ function startChatRefresh() {
             try {
                 const state = await channel.watch();
                 const chatMessages = document.getElementById('chatMessages');
-                chatMessages.innerHTML = ''; // Clear existing messages
                 
-                state.messages.forEach(message => {
-                    const isOutgoing = message.user.id === chatClient.user.id;
-                    addMessage(message.text, isOutgoing, message.user.id);
-                });
+                // Only update if there are new messages
+                if (state.messages.length !== chatMessages.children.length) {
+                    chatMessages.innerHTML = ''; // Clear existing messages
+                    state.messages.forEach(message => {
+                        const isOutgoing = message.user.id === chatClient.user.id;
+                        addMessage(message.text, isOutgoing, message.user.id);
+                    });
+                }
             } catch (error) {
-                console.error('Error refreshing chat:', error);
+                // Only log rate limit errors, don't show to user
+                if (!error.message.includes('Too many requests')) {
+                    console.error('Error refreshing chat:', error);
+                }
             }
         }
-    }, 100); // Refresh every 0.1 seconds
+    }, 2000); // Changed to 2 seconds (2000ms)
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
