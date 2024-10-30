@@ -63,13 +63,14 @@ function setupChat() {
 // Add Stream Chat initialization
 async function initializeStreamChat() {
     try {
-        // Generate or retrieve existing user ID
+        console.log("Starting chat initialization...");
+        
         const userId = localStorage.getItem('chatUserId') || 
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
+        console.log("User ID:", userId);
         
-        // Get token from server
-        const response = await fetch('/token', {
+        const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -78,12 +79,13 @@ async function initializeStreamChat() {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to get token');
+            const errorText = await response.text();
+            throw new Error(`Failed to get token: ${errorText}`);
         }
 
         const { token } = await response.json();
+        console.log("Token received");
         
-        // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
             {
@@ -93,30 +95,21 @@ async function initializeStreamChat() {
             token
         );
 
-        // Join main channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
             created_by_id: userId,
         });
 
         await channel.watch();
-        console.log('Successfully connected to chat');
-
-        // Handle incoming messages
-        channel.on('message.new', event => {
-            // Only show messages from others (own messages already shown)
-            if (event.user.id !== chatClient.user.id) {
-                addMessage(event.message.text, false, event.user.id);
-            }
-        });
+        console.log("Successfully connected to chat");
 
     } catch (error) {
-        console.error('Error initializing chat:', error);
+        console.error('Detailed error:', error);
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'system-message';
-            errorDiv.textContent = 'Failed to connect to chat. Please refresh the page.';
+            errorDiv.textContent = `Failed to connect to chat: ${error.message}`;
             chatMessages.appendChild(errorDiv);
         }
     }
