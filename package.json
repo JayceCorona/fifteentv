@@ -14,9 +14,15 @@
     "express": "^4.17.1",
     "socket.io": "^4.5.1",
     "stream-chat": "^8.41.1",
-    "stream-chat-react": "^12.4.1"
+    "stream-chat-react": "^12.4.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "body-parser": "^1.19.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
