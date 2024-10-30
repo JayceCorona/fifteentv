@@ -4,8 +4,9 @@
   "description": "Fifteen.tv streaming platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "webpack serve --mode development --open",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +24,16 @@
     "stream-chat-react": "^12.4.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "babel-loader": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "nodemon": "^3.1.7",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
   },
   "engines": {
     "node": "18.x"

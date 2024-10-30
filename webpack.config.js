@@ -1,6 +1,7 @@
 const path = require('path');
 
 module.exports = {
+  mode: 'development',
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'public'),
@@ -23,5 +24,13 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.jsx'],
+  },
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'public'),
+    },
+    compress: true,
+    port: 3000,
+    hot: true,
   },
 }; 
