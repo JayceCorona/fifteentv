@@ -70,6 +70,7 @@ async function initializeStreamChat() {
         localStorage.setItem('chatUserId', userId);
         console.log("User ID:", userId);
         
+        // Get token from server
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
@@ -86,6 +87,7 @@ async function initializeStreamChat() {
         const { token } = await response.json();
         console.log("Token received");
         
+        // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
             {
@@ -95,6 +97,7 @@ async function initializeStreamChat() {
             token
         );
 
+        // Join main channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
             created_by_id: userId,
@@ -102,6 +105,20 @@ async function initializeStreamChat() {
 
         await channel.watch();
         console.log("Successfully connected to chat");
+
+        // Add message listener
+        channel.on('message.new', event => {
+            if (event.user.id !== chatClient.user.id) {
+                addMessage(event.message.text, false, event.user.id);
+            }
+        });
+
+        // Load previous messages
+        const messages = await channel.watch();
+        messages.messages.forEach(message => {
+            const isOutgoing = message.user.id === chatClient.user.id;
+            addMessage(message.text, isOutgoing, message.user.id);
+        });
 
     } catch (error) {
         console.error('Detailed error:', error);
@@ -116,6 +133,7 @@ async function initializeStreamChat() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+    setupChat();
     await initializeStreamChat();
     console.log("Script loaded");
 
@@ -543,4 +561,86 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     `;
     document.head.appendChild(style);
+
+    // Add this CSS for chat messages
+    const chatStyles = document.createElement('style');
+    chatStyles.textContent = `
+    .chat-section {
+        width: 300px;
+        border-left: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-header {
+        padding: 15px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 8px 12px;
+        border-radius: 16px;
+        margin: 4px 0;
+    }
+
+    .message.outgoing {
+        background: #0084ff;
+        color: white;
+        align-self: flex-end;
+    }
+
+    .message.incoming {
+        background: #f0f0f0;
+        color: black;
+        align-self: flex-start;
+    }
+
+    .user-id {
+        font-size: 0.8em;
+        color: #666;
+        margin-bottom: 4px;
+    }
+
+    .timestamp {
+        font-size: 0.7em;
+        opacity: 0.7;
+        margin-top: 4px;
+    }
+
+    .chat-input-container {
+        padding: 15px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input-container input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+    }
+
+    .chat-input-container button {
+        padding: 8px 16px;
+        background: #0084ff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+    `;
+    document.head.appendChild(chatStyles);
 }); 
