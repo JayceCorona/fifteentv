@@ -8,23 +8,7 @@ function setupChat() {
     const chatMessages = document.getElementById('chatMessages');
 
     if (sendButton && messageInput && chatMessages) {
-        async function handleSend() {
-            const text = messageInput.value.trim();
-            if (text && channel) {
-                try {
-                    // Send message through Stream
-                    await channel.sendMessage({
-                        text: text
-                    });
-                    messageInput.value = '';
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
-            }
-        }
-
-        // Modified addMessage function to handle Stream messages
-        window.addMessage = function(text, isOutgoing = false) {
+        function addMessage(text, isOutgoing = true) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
             messageDiv.innerHTML = `
@@ -35,12 +19,83 @@ function setupChat() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        async function handleSend() {
+            const text = messageInput.value.trim();
+            if (text) {
+                addMessage(text, true);
+                
+                if (channel) {
+                    try {
+                        await channel.sendMessage({
+                            text: text
+                        });
+                    } catch (error) {
+                        console.error('Error sending message to Stream:', error);
+                    }
+                }
+                
+                messageInput.value = '';
+            }
+        }
+
         sendButton.addEventListener('click', handleSend);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 handleSend();
             }
         });
+    }
+}
+
+// Separate function to handle incoming Stream messages
+function handleStreamMessage(event) {
+    if (chatClient && event.user.id !== chatClient.user.id) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message incoming';
+        messageDiv.innerHTML = `
+            <div class="text">${event.message.text}</div>
+            <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+        `;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+async function initializeStreamChat() {
+    try {
+        const userId = 'user-' + Math.random().toString(36).substring(7);
+        
+        const response = await fetch('/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId }),
+        });
+        
+        const { token } = await response.json();
+        
+        chatClient = new StreamChat('g9m53zqntv69');
+        await chatClient.connectUser(
+            {
+                id: userId,
+                name: 'User ' + userId,
+            },
+            token
+        );
+
+        channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
+            name: 'Fifteen.tv Chat Room',
+            created_by_id: userId,
+        });
+
+        await channel.watch();
+
+        channel.on('message.new', handleStreamMessage);
+
+    } catch (error) {
+        console.error('Error initializing chat:', error);
     }
 }
 
