@@ -53,7 +53,9 @@ async function initializeStreamChat() {
         });
         
         if (!response.ok) {
-            throw new Error(`Failed to get token: ${await response.text()}`);
+            const errorText = await response.text();
+            console.error("Token request failed:", errorText);
+            throw new Error(`Failed to get token: ${errorText}`);
         }
 
         const { token } = await response.json();
@@ -62,25 +64,21 @@ async function initializeStreamChat() {
         // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
         
-        // Connect user with full permissions
+        // Connect user
         await chatClient.connectUser(
             {
                 id: userId,
                 name: `User ${userId.substring(0, 6)}`,
-                role: 'admin'
             },
             token
         );
-        console.log("Connected to Stream chat with full permissions");
+        console.log("Connected to Stream chat");
 
-        // Initialize channel with full access
+        // Initialize channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
-            name: 'Fifteen.tv Chat Room',
-            created_by_id: userId,
-            members: [userId]
+            name: 'Fifteen.tv Chat Room'
         });
 
-        // Watch channel
         await channel.watch();
         console.log("Channel watching started");
 
@@ -90,52 +88,29 @@ async function initializeStreamChat() {
             addMessage(event.message.text, isOutgoing, event.user.id, event.message.id);
         });
 
-        // Clear any existing error messages
+        // Show success message
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
-            const existingErrors = chatMessages.querySelectorAll('.system-message');
-            existingErrors.forEach(error => error.remove());
+            const successDiv = document.createElement('div');
+            successDiv.className = 'system-message success';
+            successDiv.textContent = 'Connected to chat!';
+            chatMessages.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
         }
-
-        // Load previous messages
-        const messages = await channel.watch();
-        messages.messages.forEach(message => {
-            const isOutgoing = message.user.id === chatClient.user.id;
-            addMessage(message.text, isOutgoing, message.user.id, message.id);
-        });
-
-        console.log("Chat initialization complete with full access");
 
     } catch (error) {
         console.error('Chat initialization error:', error);
         
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
-            // Clear existing error messages
-            const existingErrors = chatMessages.querySelectorAll('.system-message');
-            existingErrors.forEach(error => error.remove());
-            
-            // Add new error message
             const errorDiv = document.createElement('div');
-            errorDiv.className = 'system-message';
-            
-            if (error.name === 'AbortError') {
-                errorDiv.textContent = 'Connection timeout. Retrying...';
-            } else if (error.message.includes('Too many requests')) {
-                errorDiv.textContent = 'Too many connections. Retrying...';
-            } else {
-                errorDiv.textContent = 'Connection failed. Retrying...';
-            }
-            
+            errorDiv.className = 'system-message error';
+            errorDiv.textContent = 'Connection failed. Retrying...';
             chatMessages.appendChild(errorDiv);
         }
         
-        // Retry connection after delay
-        console.log("Retrying connection in 5 seconds...");
-        setTimeout(() => {
-            console.log("Retrying connection now");
-            initializeStreamChat();
-        }, 5000);
+        // Retry after delay
+        setTimeout(() => initializeStreamChat(), 5000);
     }
 }
 
@@ -196,6 +171,62 @@ function startChatRefresh() {
     }, 2000);
 }
 
+// 1. Move style declarations to the top of the file
+const upcomingStyle = `
+    .time-slot.upcoming {
+        border-left: 4px solid #9E9E9E;
+        opacity: 0.8;
+    }
+`;
+
+const concludedStyle = `
+    .time-slot.concluded {
+        border-left: 4px solid #9E9E9E;
+        opacity: 0.6;
+        background: #f5f5f5;
+    }
+
+    .concluded-text {
+        color: #666;
+        font-style: italic;
+    }
+`;
+
+// 2. Update the server token endpoint
+app.post('/token', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        console.log("Generating token for user:", userId);
+        
+        // Create user with full channel permissions
+        await serverClient.upsertUser({
+            id: userId,
+            role: 'admin',
+            name: `User ${userId.substring(0, 6)}`,
+        });
+
+        // Generate token without explicit expiration
+        const token = serverClient.createToken(userId);
+
+        console.log("Token generated successfully");
+        res.json({ token });
+    } catch (error) {
+        console.error("Token generation error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. Update the style injection in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add styles first
+    const styleElement = document.createElement('style');
+    styleElement.textContent = upcomingStyle + concludedStyle + chatStyles;
+    document.head.appendChild(styleElement);
+
+    // Then initialize chat
+    setupChat();
+    initializeStreamChat();
+}); 
 // 1. First, move the style declaration to the top of the file
 const chatStyles = `
     .chat-messages {
