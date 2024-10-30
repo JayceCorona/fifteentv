@@ -690,3 +690,30 @@ video::-webkit-media-controls {
 .str-chat__textarea textarea {
     padding: 8px;
 }
+
+/* Add these to your existing styles */
+#chat-root {
+    background: white;
+    border-left: 1px solid #e0e0e0;
+}
+
+.str-chat {
+    height: 100%;
+}
+
+.str-chat__channel {
+    height: 100%;
+}
+
+.str-chat-channel {
+    height: 100%;
+}
+
+.str-chat__message-list {
+    background: white;
+}
+
+.str-chat__input-flat {
+    background: white;
+    border-top: 1px solid #e0e0e0;
+}
