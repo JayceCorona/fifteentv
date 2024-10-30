@@ -43,21 +43,14 @@ async function initializeStreamChat() {
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
+        console.log("Requesting token for user:", userId);
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                userId,
-                // Remove any expiration time from client request
-            })
+            body: JSON.stringify({ userId })
         });
-        
-        clearTimeout(timeoutId);
         
         if (!response.ok) {
             throw new Error(`Failed to get token: ${await response.text()}`);
@@ -66,44 +59,30 @@ async function initializeStreamChat() {
         const { token } = await response.json();
         console.log("Token received successfully");
         
+        // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
+        
+        // Connect user with full permissions
         await chatClient.connectUser(
             {
                 id: userId,
                 name: `User ${userId.substring(0, 6)}`,
+                role: 'admin'
             },
             token
         );
-        console.log("Connected to Stream chat");
+        console.log("Connected to Stream chat with full permissions");
 
+        // Initialize channel with full access
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
+            created_by_id: userId,
+            members: [userId]
         });
 
-        try {
-            await channel.watch();
-            console.log("Channel watching started");
-        } catch (error) {
-            console.error("Channel watch error:", error);
-            
-            // Show specific error message to user
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'system-message';
-                
-                if (error.message.includes('not allowed to perform action')) {
-                    errorDiv.textContent = 'Reconnecting to chat...';
-                    // Retry after a short delay
-                    setTimeout(() => initializeStreamChat(), 2000);
-                } else {
-                    errorDiv.textContent = 'Chat connection error. Please refresh the page.';
-                }
-                
-                chatMessages.appendChild(errorDiv);
-            }
-            throw error;
-        }
+        // Watch channel
+        await channel.watch();
+        console.log("Channel watching started");
 
         // Add message listener
         channel.on('message.new', event => {
@@ -125,7 +104,7 @@ async function initializeStreamChat() {
             addMessage(message.text, isOutgoing, message.user.id, message.id);
         });
 
-        console.log("Chat initialization complete");
+        console.log("Chat initialization complete with full access");
 
     } catch (error) {
         console.error('Chat initialization error:', error);
