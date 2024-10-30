@@ -1,5 +1,6 @@
 let chatClient;
 let channel;
+let processedMessageIds = new Set();
 
 // Modified chat functionality with Stream integration
 function setupChat() {
@@ -76,7 +77,7 @@ async function initializeStreamChat() {
         // Add message listener
         channel.on('message.new', event => {
             if (event.user.id !== chatClient.user.id) {
-                addMessage(event.message.text, false, event.user.id);
+                addMessage(event.message.text, false, event.user.id, event.message.id);
             }
         });
 
@@ -84,7 +85,7 @@ async function initializeStreamChat() {
         const messages = await channel.watch();
         messages.messages.forEach(message => {
             const isOutgoing = message.user.id === chatClient.user.id;
-            addMessage(message.text, isOutgoing, message.user.id);
+            addMessage(message.text, isOutgoing, message.user.id, message.id);
         });
 
     } catch (error) {
@@ -106,33 +107,32 @@ async function initializeStreamChat() {
 }
 
 // Add this function to handle messages
-function addMessage(text, isOutgoing = true, userId = null) {
+function addMessage(text, isOutgoing = true, userId = null, messageId = null) {
+    // Skip if we've already processed this message
+    if (messageId && processedMessageIds.has(messageId)) {
+        return;
+    }
+    
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
+
+    // Add message ID to processed set
+    if (messageId) {
+        processedMessageIds.add(messageId);
+    }
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-wrapper ${isOutgoing ? 'outgoing' : 'incoming'}`;
     
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    if (isOutgoing) {
-        // Outgoing message style (right-aligned, blue)
-        messageDiv.innerHTML = `
-            <div class="message-bubble outgoing-bubble">
-                <div class="message-text">${text}</div>
-                <div class="message-timestamp">${timestamp}</div>
-            </div>
-        `;
-    } else {
-        // Incoming message style (left-aligned, grey with user ID)
-        messageDiv.innerHTML = `
-            <div class="message-bubble incoming-bubble">
-                <div class="user-id">User ${userId ? userId.substring(0, 6) : 'Unknown'}</div>
-                <div class="message-text">${text}</div>
-                <div class="message-timestamp">${timestamp}</div>
-            </div>
-        `;
-    }
+    messageDiv.innerHTML = `
+        ${!isOutgoing ? `<div class="user-id">User ${userId ? userId.substring(0, 6) : 'Unknown'}</div>` : ''}
+        <div class="message-bubble">
+            <div class="message-text">${text}</div>
+            <div class="message-timestamp">${timestamp}</div>
+        </div>
+    `;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -147,21 +147,20 @@ function startChatRefresh() {
                 const chatMessages = document.getElementById('chatMessages');
                 
                 // Only update if there are new messages
-                if (state.messages.length !== chatMessages.children.length) {
-                    chatMessages.innerHTML = ''; // Clear existing messages
-                    state.messages.forEach(message => {
+                const newMessages = state.messages.filter(msg => !processedMessageIds.has(msg.id));
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
                         const isOutgoing = message.user.id === chatClient.user.id;
-                        addMessage(message.text, isOutgoing, message.user.id);
+                        addMessage(message.text, isOutgoing, message.user.id, message.id);
                     });
                 }
             } catch (error) {
-                // Only log rate limit errors, don't show to user
                 if (!error.message.includes('Too many requests')) {
                     console.error('Error refreshing chat:', error);
                 }
             }
         }
-    }, 2000); // Changed to 2 seconds (2000ms)
+    }, 2000);
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -617,46 +616,51 @@ document.addEventListener('DOMContentLoaded', async function() {
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            background: #f8f9fa;
         }
 
         .message-wrapper {
             display: flex;
-            width: 100%;
-            margin: 2px 0;
+            flex-direction: column;
+            max-width: 80%;
         }
 
         .message-wrapper.outgoing {
-            justify-content: flex-end;
+            align-self: flex-end;
         }
 
         .message-wrapper.incoming {
-            justify-content: flex-start;
+            align-self: flex-start;
+        }
+
+        .user-id {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 4px;
+            margin-left: 12px;
         }
 
         .message-bubble {
-            max-width: 80%;
             padding: 10px 14px;
             border-radius: 18px;
             position: relative;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .outgoing-bubble {
+        .outgoing .message-bubble {
             background: linear-gradient(135deg, #00B2FF, #006AFF);
             color: white;
             border-bottom-right-radius: 4px;
-            margin-right: 8px;
         }
 
-        .incoming-bubble {
+        .incoming .message-bubble {
             background: white;
-            color: #343a40;
+            color: #333;
             border-bottom-left-radius: 4px;
-            margin-left: 8px;
             border: 1px solid #e0e0e0;
         }
 
@@ -667,16 +671,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             line-height: 1.4;
         }
 
-        .user-id {
-            font-size: 0.75em;
-            color: #6c757d;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
         .message-timestamp {
             font-size: 0.7em;
             opacity: 0.8;
+            margin-top: 4px;
             text-align: right;
         }
 
