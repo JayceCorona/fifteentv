@@ -5,38 +5,13 @@ let channel;
 function setupChat() {
     const sendButton = document.getElementById('sendButton');
     const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
 
-    if (sendButton && messageInput && chatMessages) {
-        function addMessage(text, isOutgoing = true, userId = null) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
-            
-            let messageHTML = `
-                <div class="text">${text}</div>
-                <div class="timestamp">${new Date().toLocaleTimeString()}</div>
-            `;
-            
-            // Add user identifier for incoming messages
-            if (!isOutgoing && userId) {
-                messageHTML = `
-                    <div class="user-id">User ${userId.substring(0, 6)}</div>
-                    ${messageHTML}
-                `;
-            }
-            
-            messageDiv.innerHTML = messageHTML;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
+    if (sendButton && messageInput) {
         async function handleSend() {
             const text = messageInput.value.trim();
             if (text) {
-                // Show message in UI immediately
                 addMessage(text, true);
                 
-                // Send to Stream if channel exists
                 if (channel) {
                     try {
                         await channel.sendMessage({
@@ -68,9 +43,7 @@ async function initializeStreamChat() {
         const userId = localStorage.getItem('chatUserId') || 
                       'user-' + Math.random().toString(36).substring(7);
         localStorage.setItem('chatUserId', userId);
-        console.log("User ID:", userId);
         
-        // Get token from server
         const response = await fetch('https://fifteentv-a5b5844eddeb.herokuapp.com/token', {
             method: 'POST',
             headers: {
@@ -80,14 +53,11 @@ async function initializeStreamChat() {
         });
         
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to get token: ${errorText}`);
+            throw new Error(`Failed to get token: ${await response.text()}`);
         }
 
         const { token } = await response.json();
-        console.log("Token received");
         
-        // Initialize Stream Chat client
         chatClient = new StreamChat('g9m53zqntv69');
         await chatClient.connectUser(
             {
@@ -97,15 +67,12 @@ async function initializeStreamChat() {
             token
         );
 
-        // Join main channel
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
-            created_by_id: userId,
         });
 
         await channel.watch();
-        console.log("Successfully connected to chat");
-
+        
         // Add message listener
         channel.on('message.new', event => {
             if (event.user.id !== chatClient.user.id) {
@@ -121,7 +88,7 @@ async function initializeStreamChat() {
         });
 
     } catch (error) {
-        console.error('Detailed error:', error);
+        console.error('Chat initialization error:', error);
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
             const errorDiv = document.createElement('div');
@@ -130,6 +97,31 @@ async function initializeStreamChat() {
             chatMessages.appendChild(errorDiv);
         }
     }
+}
+
+// Add this function to handle messages
+function addMessage(text, isOutgoing = true, userId = null) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
+    
+    let messageHTML = `
+        <div class="text">${text}</div>
+        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+    `;
+    
+    if (!isOutgoing && userId) {
+        messageHTML = `
+            <div class="user-id">User ${userId.substring(0, 6)}</div>
+            ${messageHTML}
+        `;
+    }
+    
+    messageDiv.innerHTML = messageHTML;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
