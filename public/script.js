@@ -105,19 +105,15 @@ function addMessage(text, isOutgoing = true, userId = null) {
     if (!chatMessages) return;
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
+    messageDiv.className = `message-wrapper ${isOutgoing ? 'outgoing' : 'incoming'}`;
     
     let messageHTML = `
-        <div class="text">${text}</div>
-        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+        <div class="message-bubble">
+            ${!isOutgoing && userId ? `<div class="user-id">User ${userId.substring(0, 6)}</div>` : ''}
+            <div class="message-text">${text}</div>
+            <div class="message-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
     `;
-    
-    if (!isOutgoing && userId) {
-        messageHTML = `
-            <div class="user-id">User ${userId.substring(0, 6)}</div>
-            ${messageHTML}
-        `;
-    }
     
     messageDiv.innerHTML = messageHTML;
     chatMessages.appendChild(messageDiv);
@@ -557,82 +553,135 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Add this CSS for chat messages
     const chatStyles = document.createElement('style');
     chatStyles.textContent = `
-    .chat-section {
-        width: 300px;
-        border-left: 1px solid #e0e0e0;
-        display: flex;
-        flex-direction: column;
-    }
+        .chat-section {
+            width: 300px;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
 
-    .chat-header {
-        padding: 15px;
-        background: #f5f5f5;
-        border-bottom: 1px solid #e0e0e0;
-    }
+        .chat-header {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: bold;
+        }
 
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-    .message {
-        max-width: 80%;
-        padding: 8px 12px;
-        border-radius: 16px;
-        margin: 4px 0;
-    }
+        .message-wrapper {
+            display: flex;
+            width: 100%;
+            margin: 2px 0;
+        }
 
-    .message.outgoing {
-        background: #0084ff;
-        color: white;
-        align-self: flex-end;
-    }
+        .message-wrapper.outgoing {
+            justify-content: flex-end;
+        }
 
-    .message.incoming {
-        background: #f0f0f0;
-        color: black;
-        align-self: flex-start;
-    }
+        .message-wrapper.incoming {
+            justify-content: flex-start;
+        }
 
-    .user-id {
-        font-size: 0.8em;
-        color: #666;
-        margin-bottom: 4px;
-    }
+        .message-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 16px;
+            position: relative;
+        }
 
-    .timestamp {
-        font-size: 0.7em;
-        opacity: 0.7;
-        margin-top: 4px;
-    }
+        .outgoing .message-bubble {
+            background: #0084ff;
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-right: 8px;
+        }
 
-    .chat-input-container {
-        padding: 15px;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        gap: 10px;
-    }
+        .incoming .message-bubble {
+            background: #e4e4e4;
+            color: black;
+            border-bottom-left-radius: 4px;
+            margin-left: 8px;
+        }
 
-    .chat-input-container input {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        outline: none;
-    }
+        .message-text {
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
 
-    .chat-input-container button {
-        padding: 8px 16px;
-        background: #0084ff;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-    }
+        .user-id {
+            font-size: 0.7em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .message-timestamp {
+            font-size: 0.7em;
+            opacity: 0.7;
+            text-align: right;
+        }
+
+        .outgoing .message-timestamp {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .incoming .message-timestamp {
+            color: #666;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input-container input:focus {
+            border-color: #0084ff;
+        }
+
+        .chat-input-container button {
+            padding: 8px 16px;
+            background: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .chat-input-container button:hover {
+            background: #0073e6;
+        }
+
+        .system-message {
+            text-align: center;
+            color: #666;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 8px;
+            margin: 8px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
     `;
     document.head.appendChild(chatStyles);
 }); 

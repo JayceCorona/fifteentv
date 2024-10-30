@@ -22,7 +22,23 @@ app.post('/token', async (req, res) => {
     try {
         const { userId } = req.body;
         console.log("Generating token for user:", userId);
-        const token = serverClient.createToken(userId);
+        
+        // Create user with channel permissions
+        await serverClient.upsertUser({
+            id: userId,
+            role: 'user',
+            name: `User ${userId.substring(0, 6)}`,
+        });
+
+        // Generate token with channel capabilities
+        const token = serverClient.createToken(userId, { 
+            exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour expiration
+            chat: {
+                read: true,
+                write: true,
+            }
+        });
+
         console.log("Token generated successfully");
         res.json({ token });
     } catch (error) {
