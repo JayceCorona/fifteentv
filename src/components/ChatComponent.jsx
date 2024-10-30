@@ -7,12 +7,17 @@ import {
   MessageInput,
   Thread,
   Window,
-  useChannelStateContext,
 } from 'stream-chat-react';
 import { StreamChat } from 'stream-chat';
 import 'stream-chat-react/dist/css/v2/index.css';
 
 const chatClient = StreamChat.getInstance('g9m53zqntv69');
+
+const CustomChannelHeader = () => (
+  <div className="chat-header">
+    <h3>Live Chat</h3>
+  </div>
+);
 
 const ChatComponent = () => {
   const [channel, setChannel] = React.useState(null);
@@ -59,7 +64,7 @@ const ChatComponent = () => {
     };
   }, []);
 
-  if (!channel) return <div>Loading chat...</div>;
+  if (!channel) return <div className="loading-chat">Loading chat...</div>;
 
   return (
     <Chat client={chatClient} theme="messaging light">
