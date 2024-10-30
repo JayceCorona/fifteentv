@@ -76,11 +76,28 @@ async function initializeStreamChat() {
 
         channel = chatClient.channel('messaging', 'fifteen-tv-chat', {
             name: 'Fifteen.tv Chat Room',
+            members: [userId],
+            created_by: { id: userId },
         });
 
-        await channel.watch();
-        console.log("Channel watching started");
-        
+        try {
+            await channel.watch();
+            console.log("Channel watching started");
+        } catch (error) {
+            if (error.message.includes('not allowed to perform action')) {
+                try {
+                    await channel.create();
+                    await channel.watch();
+                    console.log("Channel created and watching started");
+                } catch (createError) {
+                    console.error("Channel creation error:", createError);
+                    throw createError;
+                }
+            } else {
+                throw error;
+            }
+        }
+
         // Add message listener
         channel.on('message.new', event => {
             const isOutgoing = event.user.id === chatClient.user.id;

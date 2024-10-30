@@ -23,18 +23,21 @@ app.post('/token', async (req, res) => {
         const { userId } = req.body;
         console.log("Generating token for user:", userId);
         
-        // Create user with channel permissions
+        // Create user with explicit permissions
         await serverClient.upsertUser({
             id: userId,
             role: 'user',
             name: `User ${userId.substring(0, 6)}`,
         });
 
-        // Calculate expiration time properly (1 hour from now)
-        const expirationTime = Math.floor(Date.now() / 1000) + (60 * 60);
-
-        // Generate token with fixed expiration format
-        const token = serverClient.createToken(userId);  // Removed the options object
+        // Generate token with channel permissions
+        const token = serverClient.createToken(userId, {
+            exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour expiration
+            channels: ['messaging:fifteen-tv-chat'], // Explicitly allow access to our chat channel
+            permissions: {
+                'messaging:fifteen-tv-chat': ['read', 'write', 'presence'] // Grant specific permissions
+            }
+        });
 
         console.log("Token generated successfully");
         res.json({ token });
